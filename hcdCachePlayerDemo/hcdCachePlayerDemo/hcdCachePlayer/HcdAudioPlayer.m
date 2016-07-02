@@ -23,8 +23,7 @@
 
 @implementation HcdAudioPlayer
 
-
-+ (HcdAudioPlayer *)shareInstance {
++ (HcdAudioPlayer *)sharedInstance {
     static HcdAudioPlayer *instance = nil;
     
     static dispatch_once_t onceToken;
@@ -83,6 +82,35 @@
     }
 }
 
+- (void)manageAudioWithUrlPath:(NSString *)urlPath playOrPause:(BOOL)isPlaying {
+    
+    //这里自己写需要保存数据的路径
+    NSString *dirPath = [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) objectAtIndex:0];
+    NSString *cachePath = [NSString stringWithFormat:@"%@/%@", dirPath, [urlPath lastPathComponent]];
+    
+    if ([[NSFileManager defaultManager] fileExistsAtPath:cachePath]) {
+        if (isPlaying) {
+            [self playAudioWithPath:cachePath whiteType:HCDAudioFileType_Local];
+        } else {
+            [self pausePlayingAudio];
+        }
+    } else {
+        if (isPlaying) {
+            [self playAudioWithPath:urlPath whiteType:HCDAudioFileType_Network];
+        } else {
+            [self pausePlayingAudio];
+        }
+    }
+}
+
+- (void)manageAudioWithLocalPath:(NSString *)localPath playOrPause:(BOOL)isPlaying {
+    if (isPlaying) {
+        [self playAudioWithPath:localPath whiteType:HCDAudioFileType_Local];
+    } else {
+        [self pausePlayingAudio];
+    }
+}
+
 - (void)pausePlayingAudio {
     if (_audioPlayer) {
         [_audioPlayer pause];
@@ -90,6 +118,14 @@
             [self.delegate didAudioPlayerPausePlay:_audioPlayer];
         }
     }
+}
+
+- (void)resetVoice {
+    _audioPlayer.volume = 0.4;
+}
+
+- (void)noVoice {
+    _audioPlayer.volume = 0.0;
 }
 
 - (void)stopAudio {
@@ -107,6 +143,13 @@
 
 - (void)audioPlayerDidFinishPlaying:(AVAudioPlayer *)player successfully:(BOOL)flag {
     if(flag){
+        
+        if (_isRepeat) {
+            _stopBool = NO;
+            [self playAudio];
+            return;
+        }
+        
         //响应播放结束方法
         if ([self.delegate respondsToSelector:@selector(didAudioPlayerFinishPlay:)]) {
             [self.delegate didAudioPlayerFinishPlay:_audioPlayer];
@@ -114,9 +157,90 @@
     }
 }
 
+#pragma mark - Setter Getter方法
+
+- (AVAudioPlayer *)getAudioPlayer:(NSString *)path witeType:(HCDAudioFileType)type {
+    NSURL *fileUrl;
+    
+    switch (type) {
+        case HCDAudioFileType_Network: {
+            NSURL *url = [[NSURL alloc]initWithString:path];
+            NSData *audioData = [NSData dataWithContentsOfURL:url];
+            
+            NSString *fileName = [path lastPathComponent];
+            
+            //将数据保存在本地指定位置Cache中
+            NSString *dirPath = [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) objectAtIndex:0];
+            NSString *filePath = [NSString stringWithFormat:@"%@/%@", dirPath, fileName];
+            [audioData writeToFile:filePath atomically:YES];
+            
+            fileUrl = [NSURL fileURLWithPath:filePath];
+        }
+            break;
+        case HCDAudioFileType_Local: {
+            fileUrl = [NSURL fileURLWithPath:path];
+        }
+            break;
+        default: {
+            fileUrl = [NSURL fileURLWithPath:path];
+        }
+            break;
+    }
+    
+    //初始化播放器并播放
+    NSError *error;
+    AVAudioPlayer *player = [[AVAudioPlayer alloc] initWithContentsOfURL:fileUrl error:&error];
+    player.delegate = self;
+    [player prepareToPlay];
+    if(error){
+        NSLog(@"file error %@",error.description);
+    }
+    return player;
+}
 
 #pragma mark - private
 
+- (void)playAudioWithPath:(NSString *)path whiteType:(HCDAudioFileType)type {
+    if (path && path.length > 0) {
+        //不随着静音键和屏幕关闭而静音
+        [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:nil];
+        //上次播放的录音
+        if (_pathName && [path isEqualToString:_pathName]) {
+            if (_audioPlayer.isPlaying) {
+                [self pausePlayingAudio];
+            } else {
+                [self playAudio];
+            }
+        } else {
+            _pathName = path;
+            
+            if (_audioPlayer) {
+                [_audioPlayer stop];
+                _audioPlayer = nil;
+            }
+            
+            //初始化播放器
+            self.audioPlayer = [self getAudioPlayer:path witeType:type];
+            self.audioPlayer.volume = 0.4;
+            [self playAudio];
+        }
+    }
+}
 
+- (void)playAudio {
+    if (_audioPlayer) {
+        if (_stopBool == YES) {
+            [_audioPlayer stop];
+            self.audioPlayer = nil;
+            
+        } else {
+            [_audioPlayer play];
+            [[UIDevice currentDevice] setProximityMonitoringEnabled:NO];
+            if ([self.delegate respondsToSelector:@selector(didAudioPlayerBeginPlay:)]) {
+                [self.delegate didAudioPlayerBeginPlay:_audioPlayer];
+            }
+        }
+    }
+}
 
 @end
