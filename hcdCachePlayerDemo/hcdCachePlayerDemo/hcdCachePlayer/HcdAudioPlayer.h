@@ -66,10 +66,10 @@ typedef NS_ENUM (NSUInteger, HCDAudioFileType) {
 
 + (HcdAudioPlayer *)sharedInstance;
 
-@property (nonatomic, assign) BOOL stopBool;
-@property (nonatomic, strong) AVAudioPlayer *audioPlayer;
-@property (nonatomic, copy) NSString *pathName;
-@property (nonatomic, assign) BOOL isRepeat;//是否重复播放
+@property (nonatomic, assign) BOOL                  stopBool;
+@property (nonatomic, strong) AVAudioPlayer         *audioPlayer;
+@property (nonatomic, copy  ) NSString              *pathName;
+@property (nonatomic, assign) BOOL                  isRepeat;//是否重复播放
 
 //声明协议代理
 @property (nonatomic, retain) id<HcdAudioPlayerDelegate> delegate;
