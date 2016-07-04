@@ -165,9 +165,10 @@
         NSString *document = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).lastObject;
         NSString *movePath =  [document stringByAppendingPathComponent:md5File];
         
-        if ([[NSFileManager defaultManager] fileExistsAtPath:movePath]) {
+        if (![[NSFileManager defaultManager] fileExistsAtPath:movePath]) {
             BOOL isSuccess = [[NSFileManager defaultManager] copyItemAtPath:_tempPath toPath:movePath error:nil];
             if (isSuccess) {
+                [self clearData];
                 NSLog(@"rename success");
             }else{
                 NSLog(@"rename fail");

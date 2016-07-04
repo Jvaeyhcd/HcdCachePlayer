@@ -20,6 +20,7 @@
 
 #import "HcdCachePlayer.h"
 #import "HcdLoaderURLConnection.h"
+#import "NSString+MD5.h"
 
 #define kScreenHeight ([UIScreen mainScreen].bounds.size.height)
 #define kScreenWidth ([UIScreen mainScreen].bounds.size.width)
@@ -106,19 +107,7 @@ static NSString *const HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath = @"playb
     
     NSString *str = [url absoluteString];
     //如果是ios  < 7 或者是本地资源，直接播放
-    if (![str hasPrefix:@"https"] || ![str hasPrefix:@"http"]) {
-        self.videoAsset  = [AVURLAsset URLAssetWithURL:url options:nil];
-        self.currentPlayerItem          = [AVPlayerItem playerItemWithAsset:_videoAsset];
-        if (!self.player) {
-            self.player = [AVPlayer playerWithPlayerItem:self.currentPlayerItem];
-        } else {
-            [self.player replaceCurrentItemWithPlayerItem:self.currentPlayerItem];
-        }
-        self.currentPlayerLayer       = [AVPlayerLayer playerLayerWithPlayer:self.player];
-        self.currentPlayerLayer.frame = CGRectMake(0, 44, showView.bounds.size.width, showView.bounds.size.height-44);
-        _isLocalVideo = YES;
-        
-    } else {   //ios7以上采用resourceLoader给播放器补充数据
+    if ([str hasPrefix:@"https"] || [str hasPrefix:@"http"]) {
         
         self.resouerLoader          = [[HcdLoaderURLConnection alloc] init];
         self.resouerLoader.delegate = self;
@@ -135,6 +124,19 @@ static NSString *const HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath = @"playb
         self.currentPlayerLayer       = [AVPlayerLayer playerLayerWithPlayer:self.player];
         self.currentPlayerLayer.frame = CGRectMake(0, 44, showView.bounds.size.width, showView.bounds.size.height-44);
         _isLocalVideo = NO;
+        
+    } else {
+        
+        self.videoAsset  = [AVURLAsset URLAssetWithURL:url options:nil];
+        self.currentPlayerItem          = [AVPlayerItem playerItemWithAsset:_videoAsset];
+        if (!self.player) {
+            self.player = [AVPlayer playerWithPlayerItem:self.currentPlayerItem];
+        } else {
+            [self.player replaceCurrentItemWithPlayerItem:self.currentPlayerItem];
+        }
+        self.currentPlayerLayer       = [AVPlayerLayer playerLayerWithPlayer:self.player];
+        self.currentPlayerLayer.frame = CGRectMake(0, 44, showView.bounds.size.width, showView.bounds.size.height-44);
+        _isLocalVideo = YES;
         
     }
     
@@ -176,15 +178,24 @@ static NSString *const HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath = @"playb
 }
 
 
-- (void)playWithUrl:(NSString *)url showView:(UIView *)showView {
+- (void)playWithUrl:(NSURL *)url showView:(UIView *)showView {
     
-//    NSString *document = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).lastObject;
-//    NSString *movePath =  [document stringByAppendingPathComponent:@"保存数据.mp4"];
-//    
-//    NSURL *localURL = [NSURL fileURLWithPath:movePath];
-//    
-//    [self playWithVideoUrl:localURL showView:showView];
-    [self playWithVideoUrl:[NSURL URLWithString:url] showView:showView];
+    NSURLComponents *components = [[NSURLComponents alloc] initWithURL:url resolvingAgainstBaseURL:NO];
+    components.scheme = @"streaming";
+    NSURL *playUrl = [components URL];
+    NSString *md5File = [NSString stringWithFormat:@"%@.mp4", [[playUrl absoluteString] stringToMD5]];
+    
+    //这里自己写需要保存数据的路径
+    NSString *document = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).lastObject;
+    NSString *cachePath =  [document stringByAppendingPathComponent:md5File];
+    
+    if ([[NSFileManager defaultManager] fileExistsAtPath:cachePath]) {
+        NSURL *localURL = [NSURL fileURLWithPath:cachePath];
+        [self playWithVideoUrl:localURL showView:showView];
+    } else {
+        [self playWithVideoUrl:url showView:showView];
+    }
+    
 }
 
 - (void)fullScreen {

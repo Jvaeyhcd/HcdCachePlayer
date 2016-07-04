@@ -42,7 +42,20 @@ typedef NS_ENUM(NSInteger, HCDPlayerState) {
 @property (nonatomic, assign  ) BOOL           stopInBackground;        //是否在后台播放，默认YES
 
 + (instancetype)sharedInstance;
-- (void)playWithUrl:(NSString *)url showView:(UIView *)showView;
+
+/**
+ *  播放服务器的视频，先判断本地是否有缓存文件，缓存文件名为连接的url经过md5加密后生成的字符串
+ *
+ *  @param url      视频地址
+ *  @param showView 显示的View
+ */
+- (void)playWithUrl:(NSURL *)url showView:(UIView *)showView;
+
+/**
+ *  指定到某一事件点开始播放
+ *
+ *  @param seconds 时间点
+ */
 - (void)seekToTime:(CGFloat)seconds;
 
 /**
