@@ -15,6 +15,19 @@
 		0C168D651D266C7F0008F58A /* HcdAudioPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 0C168D641D266C7F0008F58A /* HcdAudioPlayer.m */; };
 		0C168D671D266D010008F58A /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0C168D661D266D010008F58A /* AVFoundation.framework */; };
 		0C168D691D266E930008F58A /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0C168D681D266E930008F58A /* Foundation.framework */; };
+		0CD99F6C1D29F75B0069E8B0 /* HcdCachePlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CD99F6B1D29F75B0069E8B0 /* HcdCachePlayer.m */; };
+		0CD99F751D2A14C10069E8B0 /* icon_pause@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 0CD99F6D1D2A14C10069E8B0 /* icon_pause@2x.png */; };
+		0CD99F761D2A14C10069E8B0 /* icon_pause@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 0CD99F6E1D2A14C10069E8B0 /* icon_pause@3x.png */; };
+		0CD99F771D2A14C10069E8B0 /* icon_play_hl@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 0CD99F6F1D2A14C10069E8B0 /* icon_play_hl@2x.png */; };
+		0CD99F781D2A14C10069E8B0 /* icon_play_hl@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 0CD99F701D2A14C10069E8B0 /* icon_play_hl@3x.png */; };
+		0CD99F791D2A14C10069E8B0 /* icon_play@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 0CD99F711D2A14C10069E8B0 /* icon_play@2x.png */; };
+		0CD99F7A1D2A14C10069E8B0 /* icon_play@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 0CD99F721D2A14C10069E8B0 /* icon_play@3x.png */; };
+		0CD99F7F1D2A15A20069E8B0 /* icon_full@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 0CD99F7D1D2A15A20069E8B0 /* icon_full@2x.png */; };
+		0CD99F801D2A15A20069E8B0 /* icon_full@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 0CD99F7E1D2A15A20069E8B0 /* icon_full@3x.png */; };
+		0CD99F831D2A36DE0069E8B0 /* HcdVideoRequestTask.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CD99F821D2A36DE0069E8B0 /* HcdVideoRequestTask.m */; };
+		0CD99F861D2A3E200069E8B0 /* HcdLoaderURLConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CD99F851D2A3E200069E8B0 /* HcdLoaderURLConnection.m */; };
+		0CD99F881D2A45840069E8B0 /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0CD99F871D2A45840069E8B0 /* MobileCoreServices.framework */; };
+		0CD99F8B1D2A52BF0069E8B0 /* NSString+MD5.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CD99F8A1D2A52BF0069E8B0 /* NSString+MD5.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -31,6 +44,23 @@
 		0C168D641D266C7F0008F58A /* HcdAudioPlayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HcdAudioPlayer.m; sourceTree = "<group>"; };
 		0C168D661D266D010008F58A /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		0C168D681D266E930008F58A /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		0CD99F6A1D29F75B0069E8B0 /* HcdCachePlayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HcdCachePlayer.h; sourceTree = "<group>"; };
+		0CD99F6B1D29F75B0069E8B0 /* HcdCachePlayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HcdCachePlayer.m; sourceTree = "<group>"; };
+		0CD99F6D1D2A14C10069E8B0 /* icon_pause@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon_pause@2x.png"; sourceTree = "<group>"; };
+		0CD99F6E1D2A14C10069E8B0 /* icon_pause@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon_pause@3x.png"; sourceTree = "<group>"; };
+		0CD99F6F1D2A14C10069E8B0 /* icon_play_hl@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon_play_hl@2x.png"; sourceTree = "<group>"; };
+		0CD99F701D2A14C10069E8B0 /* icon_play_hl@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon_play_hl@3x.png"; sourceTree = "<group>"; };
+		0CD99F711D2A14C10069E8B0 /* icon_play@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon_play@2x.png"; sourceTree = "<group>"; };
+		0CD99F721D2A14C10069E8B0 /* icon_play@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon_play@3x.png"; sourceTree = "<group>"; };
+		0CD99F7D1D2A15A20069E8B0 /* icon_full@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon_full@2x.png"; sourceTree = "<group>"; };
+		0CD99F7E1D2A15A20069E8B0 /* icon_full@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon_full@3x.png"; sourceTree = "<group>"; };
+		0CD99F811D2A36DE0069E8B0 /* HcdVideoRequestTask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HcdVideoRequestTask.h; sourceTree = "<group>"; };
+		0CD99F821D2A36DE0069E8B0 /* HcdVideoRequestTask.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HcdVideoRequestTask.m; sourceTree = "<group>"; };
+		0CD99F841D2A3E200069E8B0 /* HcdLoaderURLConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HcdLoaderURLConnection.h; sourceTree = "<group>"; };
+		0CD99F851D2A3E200069E8B0 /* HcdLoaderURLConnection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HcdLoaderURLConnection.m; sourceTree = "<group>"; };
+		0CD99F871D2A45840069E8B0 /* MobileCoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MobileCoreServices.framework; path = System/Library/Frameworks/MobileCoreServices.framework; sourceTree = SDKROOT; };
+		0CD99F891D2A52BF0069E8B0 /* NSString+MD5.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSString+MD5.h"; sourceTree = "<group>"; };
+		0CD99F8A1D2A52BF0069E8B0 /* NSString+MD5.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSString+MD5.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -38,6 +68,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0CD99F881D2A45840069E8B0 /* MobileCoreServices.framework in Frameworks */,
 				0C168D691D266E930008F58A /* Foundation.framework in Frameworks */,
 				0C168D671D266D010008F58A /* AVFoundation.framework in Frameworks */,
 			);
@@ -49,6 +80,7 @@
 		0C168D3E1D2666A30008F58A = {
 			isa = PBXGroup;
 			children = (
+				0CD99F871D2A45840069E8B0 /* MobileCoreServices.framework */,
 				0C168D681D266E930008F58A /* Foundation.framework */,
 				0C168D661D266D010008F58A /* AVFoundation.framework */,
 				0C168D491D2666A40008F58A /* hcdCachePlayerDemo */,
@@ -93,6 +125,22 @@
 			children = (
 				0C168D631D266C7F0008F58A /* HcdAudioPlayer.h */,
 				0C168D641D266C7F0008F58A /* HcdAudioPlayer.m */,
+				0CD99F891D2A52BF0069E8B0 /* NSString+MD5.h */,
+				0CD99F8A1D2A52BF0069E8B0 /* NSString+MD5.m */,
+				0CD99F6A1D29F75B0069E8B0 /* HcdCachePlayer.h */,
+				0CD99F6B1D29F75B0069E8B0 /* HcdCachePlayer.m */,
+				0CD99F811D2A36DE0069E8B0 /* HcdVideoRequestTask.h */,
+				0CD99F821D2A36DE0069E8B0 /* HcdVideoRequestTask.m */,
+				0CD99F841D2A3E200069E8B0 /* HcdLoaderURLConnection.h */,
+				0CD99F851D2A3E200069E8B0 /* HcdLoaderURLConnection.m */,
+				0CD99F7D1D2A15A20069E8B0 /* icon_full@2x.png */,
+				0CD99F7E1D2A15A20069E8B0 /* icon_full@3x.png */,
+				0CD99F6D1D2A14C10069E8B0 /* icon_pause@2x.png */,
+				0CD99F6E1D2A14C10069E8B0 /* icon_pause@3x.png */,
+				0CD99F6F1D2A14C10069E8B0 /* icon_play_hl@2x.png */,
+				0CD99F701D2A14C10069E8B0 /* icon_play_hl@3x.png */,
+				0CD99F711D2A14C10069E8B0 /* icon_play@2x.png */,
+				0CD99F721D2A14C10069E8B0 /* icon_play@3x.png */,
 			);
 			path = hcdCachePlayer;
 			sourceTree = "<group>";
@@ -154,8 +202,16 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0CD99F7F1D2A15A20069E8B0 /* icon_full@2x.png in Resources */,
+				0CD99F801D2A15A20069E8B0 /* icon_full@3x.png in Resources */,
+				0CD99F771D2A14C10069E8B0 /* icon_play_hl@2x.png in Resources */,
 				0C168D5A1D2666A50008F58A /* LaunchScreen.storyboard in Resources */,
+				0CD99F781D2A14C10069E8B0 /* icon_play_hl@3x.png in Resources */,
+				0CD99F761D2A14C10069E8B0 /* icon_pause@3x.png in Resources */,
+				0CD99F7A1D2A14C10069E8B0 /* icon_play@3x.png in Resources */,
+				0CD99F751D2A14C10069E8B0 /* icon_pause@2x.png in Resources */,
 				0C168D571D2666A50008F58A /* Assets.xcassets in Resources */,
+				0CD99F791D2A14C10069E8B0 /* icon_play@2x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -167,6 +223,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				0C168D521D2666A50008F58A /* ViewController.m in Sources */,
+				0CD99F6C1D29F75B0069E8B0 /* HcdCachePlayer.m in Sources */,
+				0CD99F8B1D2A52BF0069E8B0 /* NSString+MD5.m in Sources */,
+				0CD99F861D2A3E200069E8B0 /* HcdLoaderURLConnection.m in Sources */,
+				0CD99F831D2A36DE0069E8B0 /* HcdVideoRequestTask.m in Sources */,
 				0C168D651D266C7F0008F58A /* HcdAudioPlayer.m in Sources */,
 				0C168D4F1D2666A50008F58A /* AppDelegate.m in Sources */,
 				0C168D4C1D2666A40008F58A /* main.m in Sources */,
@@ -312,6 +372,7 @@
 				0C168D601D2666A50008F58A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

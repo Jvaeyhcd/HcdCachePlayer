@@ -8,6 +8,7 @@
 
 #import "ViewController.h"
 #import "HcdAudioPlayer.h"
+#import "HcdCachePlayer.h"
 
 @interface ViewController ()
 
@@ -25,6 +26,13 @@
     [playSoundBtn setTitle:@"播放声音" forState:UIControlStateNormal];
     [playSoundBtn addTarget:self action:@selector(playSound) forControlEvents:UIControlEventTouchUpInside];
     playSoundBtn.backgroundColor = [UIColor greenColor];
+    
+    HcdCachePlayer *play = [HcdCachePlayer sharedInstance];
+    UIView *videoView = [[UIView alloc]initWithFrame:CGRectMake(0, 0, [UIScreen mainScreen].bounds.size.width, 300)];
+    [self.view addSubview:videoView];
+    
+//    [play playWithUrl:@"http://v.jxvdy.com/sendfile/w5bgP3A8JgiQQo5l0hvoNGE2H16WbN09X-ONHPq3P3C1BISgf7C-qVs6_c8oaw3zKScO78I--b0BGFBRxlpw13sf2e54QA" showView:videoView];
+    [play playWithUrl:@"http://7xsnx0.com2.z0.glb.qiniucdn.com/14651947751451.mp4" showView:videoView];
     
     [self.view addSubview:playSoundBtn];
 }
