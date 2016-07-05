@@ -21,18 +21,19 @@
 #import <UIKit/UIKit.h>
 #import <AVFoundation/AVFoundation.h>
 
-FOUNDATION_EXPORT const NSString * kHCDPlayerStateChangedNotification;
-FOUNDATION_EXPORT const NSString * kHCDPlayerProgressChangedNotification;
-FOUNDATION_EXPORT const NSString * kHCDPlayerLoadProgressChangedNotification;
+FOUNDATION_EXPORT NSString *const kHCDPlayerStateChangedNotification;
+FOUNDATION_EXPORT NSString *const kHCDPlayerProgressChangedNotification;
+FOUNDATION_EXPORT NSString *const kHCDPlayerLoadProgressChangedNotification;
 
 typedef NS_ENUM(NSInteger, HCDPlayerState) {
-    HCDPlayerStateBuffering = 1,
-    HCDPlayerStatePlaying,
-    HCDPlayerStateStopped,
-    HCDPlayerStatePause,
+    HCDPlayerStateBuffering = 1,    //正在缓存
+    HCDPlayerStatePlaying,          //正在播放
+    HCDPlayerStateStopped,          //播放结束
+    HCDPlayerStatePause,            //暂停播放
+    HCDPlayerStateFinish,           //播放完成
 };
 
-@interface HcdCachePlayer : NSObject
+@interface HcdCacheVideoPlayer : NSObject
 
 @property (nonatomic, readonly) HCDPlayerState state;                   //视频Player状态
 @property (nonatomic, readonly) CGFloat        loadedProgress;          //缓冲的进度
@@ -49,7 +50,7 @@ typedef NS_ENUM(NSInteger, HCDPlayerState) {
  *  @param url      视频地址
  *  @param showView 显示的View
  */
-- (void)playWithUrl:(NSURL *)url showView:(UIView *)showView;
+- (void)playWithUrl:(NSURL *)url showView:(UIView *)showView andSuperView:(UIView *)superView;
 
 /**
  *  指定到某一事件点开始播放

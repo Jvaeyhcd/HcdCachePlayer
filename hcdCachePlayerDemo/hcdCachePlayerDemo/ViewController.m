@@ -8,7 +8,7 @@
 
 #import "ViewController.h"
 #import "HcdAudioPlayer.h"
-#import "HcdCachePlayer.h"
+#import "HcdCacheVideoPlayer.h"
 #import "NSString+MD5.h"
 
 @interface ViewController ()
@@ -23,16 +23,16 @@
     // Do any additional setup after loading the view, typically from a nib.
     
     
-    UIButton *playSoundBtn = [[UIButton alloc]initWithFrame:CGRectMake(100, 100, 80, 40)];
+    UIButton *playSoundBtn = [[UIButton alloc]initWithFrame:CGRectMake(100, 450, 80, 40)];
     [playSoundBtn setTitle:@"播放声音" forState:UIControlStateNormal];
     [playSoundBtn addTarget:self action:@selector(playSound) forControlEvents:UIControlEventTouchUpInside];
     playSoundBtn.backgroundColor = [UIColor greenColor];
     
-    HcdCachePlayer *play = [HcdCachePlayer sharedInstance];
+    HcdCacheVideoPlayer *play = [HcdCacheVideoPlayer sharedInstance];
     UIView *videoView = [[UIView alloc]initWithFrame:CGRectMake(0, 0, [UIScreen mainScreen].bounds.size.width, 300)];
     [self.view addSubview:videoView];
     
-    [play playWithUrl:[NSURL URLWithString:@"http://7xsnx0.com2.z0.glb.qiniucdn.com/14651947751451.mp4"] showView:videoView];
+    [play playWithUrl:[NSURL URLWithString:@"http://7xsnx0.com2.z0.glb.qiniucdn.com/14651947751451.mp4"] showView:videoView andSuperView:self.view];
     
     [self.view addSubview:playSoundBtn];
 }

@@ -18,23 +18,28 @@
 //  Copyright © 2016年 Polesapp. All rights reserved.
 //
 
-#import "HcdCachePlayer.h"
+#import "HcdCacheVideoPlayer.h"
 #import "HcdLoaderURLConnection.h"
 #import "NSString+MD5.h"
+#import "Masonry.h"
 
 #define kScreenHeight ([UIScreen mainScreen].bounds.size.height)
 #define kScreenWidth ([UIScreen mainScreen].bounds.size.width)
 
-NSString *const kTBPlayerStateChangedNotification    = @"TBPlayerStateChangedNotification";
-NSString *const kTBPlayerProgressChangedNotification = @"TBPlayerProgressChangedNotification";
-NSString *const kTBPlayerLoadProgressChangedNotification = @"TBPlayerLoadProgressChangedNotification";
+NSString *const kHCDPlayerStateChangedNotification    = @"HCDPlayerStateChangedNotification";
+NSString *const kHCDPlayerProgressChangedNotification = @"HCDPlayerProgressChangedNotification";
+NSString *const kHCDPlayerLoadProgressChangedNotification = @"HCDPlayerLoadProgressChangedNotification";
 
 static NSString *const HCDVideoPlayerItemStatusKeyPath = @"status";
 static NSString *const HCDVideoPlayerItemLoadedTimeRangesKeyPath = @"loadedTimeRanges";
 static NSString *const HCDVideoPlayerItemPlaybackBufferEmptyKeyPath = @"playbackBufferEmpty";
 static NSString *const HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath = @"playbackLikelyToKeepUp";
 
-@interface HcdCachePlayer()<HCDLoaderURLConnectionDelegate>
+@interface HcdCacheVideoPlayer()<HCDLoaderURLConnectionDelegate, UIGestureRecognizerDelegate>
+{
+    //用来控制上下菜单view隐藏的timer
+    NSTimer * _hiddenTimer;
+}
 
 @property (nonatomic, assign) HCDPlayerState state;
 @property (nonatomic, assign) CGFloat        loadedProgress;
@@ -52,6 +57,8 @@ static NSString *const HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath = @"playb
 @property (nonatomic, assign) BOOL           isFinishLoad;            //是否下载完毕
 
 @property (nonatomic, weak  ) UIView         *showView;
+@property (nonatomic, strong) UIView         *touchView;              //事件响应View
+@property (nonatomic, weak  ) UIView         *playerSuperView;        //播放界面的父页面
 
 @property (nonatomic, strong) UIView         *toolView;
 @property (nonatomic, strong) UILabel        *currentTimeLbl;
@@ -61,17 +68,18 @@ static NSString *const HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath = @"playb
 @property (nonatomic, strong) UIButton       *stopButton;             //播放暂停按钮
 @property (nonatomic, strong) UIButton       *screenButton;           //全屏按钮
 @property (nonatomic, assign) BOOL           isFullScreen;
+@property (nonatomic, strong) UIActivityIndicatorView *actIndicator;  //加载视频时的旋转菊花
 
 @property (nonatomic, strong) HcdLoaderURLConnection *resouerLoader;
 
 @end
 
-@implementation HcdCachePlayer
+@implementation HcdCacheVideoPlayer
 
 + (instancetype)sharedInstance {
     
     static dispatch_once_t onceToken;
-    static HcdCachePlayer *instance;
+    static HcdCacheVideoPlayer *instance;
     
     dispatch_once(&onceToken, ^{
         instance = [[self alloc]init];
@@ -93,7 +101,7 @@ static NSString *const HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath = @"playb
     return self;
 }
 
-- (void)playWithVideoUrl:(NSURL *)url showView:(UIView *)showView
+- (void)playWithVideoUrl:(NSURL *)url showView:(UIView *)showView andSuperView:(UIView *)superView
 {
     
     [self.player pause];
@@ -104,6 +112,8 @@ static NSString *const HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath = @"playb
     self.current  = 0;
     
     _showView = showView;
+    _showView.backgroundColor = [UIColor blueColor];
+    _playerSuperView = superView;
     
     NSString *str = [url absoluteString];
     //如果是ios  < 7 或者是本地资源，直接播放
@@ -112,33 +122,25 @@ static NSString *const HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath = @"playb
         self.resouerLoader          = [[HcdLoaderURLConnection alloc] init];
         self.resouerLoader.delegate = self;
         NSURL *playUrl              = [self.resouerLoader getSchemeVideoURL:url];
-        self.videoURLAsset             = [AVURLAsset URLAssetWithURL:playUrl options:nil];
+        self.videoURLAsset          = [AVURLAsset URLAssetWithURL:playUrl options:nil];
         [_videoURLAsset.resourceLoader setDelegate:self.resouerLoader queue:dispatch_get_main_queue()];
-        self.currentPlayerItem          = [AVPlayerItem playerItemWithAsset:_videoURLAsset];
+        self.currentPlayerItem      = [AVPlayerItem playerItemWithAsset:_videoURLAsset];
         
-        if (!self.player) {
-            self.player = [AVPlayer playerWithPlayerItem:self.currentPlayerItem];
-        } else {
-            [self.player replaceCurrentItemWithPlayerItem:self.currentPlayerItem];
-        }
-        self.currentPlayerLayer       = [AVPlayerLayer playerLayerWithPlayer:self.player];
-        self.currentPlayerLayer.frame = CGRectMake(0, 44, showView.bounds.size.width, showView.bounds.size.height-44);
         _isLocalVideo = NO;
-        
     } else {
-        
-        self.videoAsset  = [AVURLAsset URLAssetWithURL:url options:nil];
-        self.currentPlayerItem          = [AVPlayerItem playerItemWithAsset:_videoAsset];
-        if (!self.player) {
-            self.player = [AVPlayer playerWithPlayerItem:self.currentPlayerItem];
-        } else {
-            [self.player replaceCurrentItemWithPlayerItem:self.currentPlayerItem];
-        }
-        self.currentPlayerLayer       = [AVPlayerLayer playerLayerWithPlayer:self.player];
-        self.currentPlayerLayer.frame = CGRectMake(0, 44, showView.bounds.size.width, showView.bounds.size.height-44);
+        self.videoAsset = [AVURLAsset URLAssetWithURL:url options:nil];
+        self.currentPlayerItem = [AVPlayerItem playerItemWithAsset:_videoAsset];
         _isLocalVideo = YES;
-        
     }
+    
+    if (!self.player) {
+        self.player = [AVPlayer playerWithPlayerItem:self.currentPlayerItem];
+    } else {
+        [self.player replaceCurrentItemWithPlayerItem:self.currentPlayerItem];
+    }
+    self.currentPlayerLayer       = [AVPlayerLayer playerLayerWithPlayer:self.player];
+    self.currentPlayerLayer.frame = CGRectMake(0, 44, showView.bounds.size.width, showView.bounds.size.height - 44);
+    self.currentPlayerLayer.videoGravity = AVLayerVideoGravityResizeAspect;
     
     [showView.layer addSublayer:self.currentPlayerLayer];
     
@@ -152,33 +154,28 @@ static NSString *const HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath = @"playb
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(playerItemDidPlayToEnd:) name:AVPlayerItemDidPlayToEndTimeNotification object:self.currentPlayerItem];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(playerItemPlaybackStalled:) name:AVPlayerItemPlaybackStalledNotification object:self.currentPlayerItem];
     
-    
-    // 本地文件不设置TBPlayerStateBuffering状态
     if ([url.scheme isEqualToString:@"file"]) {
-        
-        // 如果已经在TBPlayerStatePlaying，则直接发通知，否则设置状态
+        // 如果已经在HCDPlayerStatePlaying，则直接发通知，否则设置状态
         if (self.state == HCDPlayerStatePlaying) {
-            [[NSNotificationCenter defaultCenter] postNotificationName:kTBPlayerStateChangedNotification object:nil];
+            [[NSNotificationCenter defaultCenter] postNotificationName:kHCDPlayerStateChangedNotification object:nil];
         } else {
             self.state = HCDPlayerStatePlaying;
         }
         
     } else {
-        
-        // 如果已经在TBPlayerStateBuffering，则直接发通知，否则设置状态
+        // 如果已经在HCDPlayerStateBuffering，则直接发通知，否则设置状态
         if (self.state == HCDPlayerStateBuffering) {
-            [[NSNotificationCenter defaultCenter] postNotificationName:kTBPlayerStateChangedNotification object:nil];
+            [[NSNotificationCenter defaultCenter] postNotificationName:kHCDPlayerStateChangedNotification object:nil];
         } else {
             self.state = HCDPlayerStateBuffering;
         }
-        
     }
     
     [self setVideoToolView];
 }
 
 
-- (void)playWithUrl:(NSURL *)url showView:(UIView *)showView {
+- (void)playWithUrl:(NSURL *)url showView:(UIView *)showView andSuperView:(UIView *)superView {
     
     NSURLComponents *components = [[NSURLComponents alloc] initWithURL:url resolvingAgainstBaseURL:NO];
     components.scheme = @"streaming";
@@ -191,15 +188,20 @@ static NSString *const HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath = @"playb
     
     if ([[NSFileManager defaultManager] fileExistsAtPath:cachePath]) {
         NSURL *localURL = [NSURL fileURLWithPath:cachePath];
-        [self playWithVideoUrl:localURL showView:showView];
+        [self playWithVideoUrl:localURL showView:showView andSuperView:superView];
     } else {
-        [self playWithVideoUrl:url showView:showView];
+        [self playWithVideoUrl:url showView:showView andSuperView:superView];
     }
-    
 }
 
 - (void)fullScreen {
-    
+    //如果全屏下
+    if (_isFullScreen) {
+        [self toOrientation:UIInterfaceOrientationPortrait];
+    }else{
+        [self toOrientation:UIInterfaceOrientationLandscapeRight];
+    }
+    [self toolViewOutHidden];
 }
 
 - (void)halfScreen {
@@ -220,6 +222,8 @@ static NSString *const HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath = @"playb
         [self.player play];
         if (!self.currentPlayerItem.isPlaybackLikelyToKeepUp) {
             self.state = HCDPlayerStateBuffering;
+            [self.actIndicator startAnimating];
+            self.actIndicator.hidden = NO;
 //            [[XCHudHelper sharedInstance] showHudOnView:_showView caption:nil image:nil acitivity:YES autoHideTime:0];
         }
         
@@ -246,7 +250,12 @@ static NSString *const HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath = @"playb
 
 - (void)playerItemDidPlayToEnd:(NSNotification *)notification
 {
-    [self stop];
+//    [self stop];
+    //重新播放
+    
+    self.state = HCDPlayerStateFinish;
+    [_stopButton setImage:[UIImage imageNamed:@"icon_play"] forState:UIControlStateNormal];
+    [_stopButton setImage:[UIImage imageNamed:@"icon_play_hl"] forState:UIControlStateHighlighted];
 }
 
 //在监听播放器状态中处理比较准确
@@ -262,6 +271,8 @@ static NSString *const HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath = @"playb
     
     if ([HCDVideoPlayerItemStatusKeyPath isEqualToString:keyPath]) {
         if ([playerItem status] == AVPlayerStatusReadyToPlay) {
+            
+            _hiddenTimer = [NSTimer scheduledTimerWithTimeInterval:5.0 target:self selector:@selector(toolViewHidden) userInfo:nil repeats:NO];
             [self monitoringPlayback:playerItem];// 给播放器添加计时器
             
         } else if ([playerItem status] == AVPlayerStatusFailed || [playerItem status] == AVPlayerStatusUnknown) {
@@ -274,16 +285,19 @@ static NSString *const HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath = @"playb
         
     } else if ([HCDVideoPlayerItemPlaybackBufferEmptyKeyPath isEqualToString:keyPath]) { //监听播放器在缓冲数据的状态
 //        [[XCHudHelper sharedInstance] showHudOnView:_showView caption:nil image:nil acitivity:YES autoHideTime:0];
+        [self.actIndicator startAnimating];
+        self.actIndicator.hidden = NO;
         if (playerItem.isPlaybackBufferEmpty) {
             self.state = HCDPlayerStateBuffering;
             [self bufferingSomeSecond];
         }
+    } else if ([HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath isEqualToString:keyPath]) {
+        NSLog(@"HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath");
     }
 }
 
 - (void)monitoringPlayback:(AVPlayerItem *)playerItem
 {
-    
     
     self.duration = playerItem.duration.value / playerItem.duration.timescale; //视频总时间
     [self.player play];
@@ -294,7 +308,7 @@ static NSString *const HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath = @"playb
     self.playbackTimeObserver = [self.player addPeriodicTimeObserverForInterval:CMTimeMake(1, 1) queue:NULL usingBlock:^(CMTime time) {
         
         __strong __typeof(weakSelf)strongSelf = weakSelf;
-        CGFloat current = playerItem.currentTime.value/playerItem.currentTime.timescale;
+        CGFloat current = playerItem.currentTime.value / playerItem.currentTime.timescale;
         [strongSelf updateCurrentTime:current];
         [strongSelf updateVideoSlider:current];
         if (strongSelf.isPauseByUser == NO) {
@@ -307,11 +321,18 @@ static NSString *const HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath = @"playb
             if (strongSelf.current > strongSelf.duration) {
                 strongSelf.duration = strongSelf.current;
             }
-            [[NSNotificationCenter defaultCenter] postNotificationName:kTBPlayerProgressChangedNotification object:nil];
+            [[NSNotificationCenter defaultCenter] postNotificationName:kHCDPlayerProgressChangedNotification object:nil];
         }
         
     }];
     
+}
+
+- (void)unmonitoringPlayback:(AVPlayerItem *)playerItem {
+    if (self.playbackTimeObserver != nil) {
+        [self.player removeTimeObserver:self.playbackTimeObserver];
+        self.playbackTimeObserver = nil;
+    }
 }
 
 - (void)calculateDownloadProgress:(AVPlayerItem *)playerItem
@@ -361,13 +382,15 @@ static NSString *const HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath = @"playb
     }
     
     _loadedProgress = loadedProgress;
-    [[NSNotificationCenter defaultCenter] postNotificationName:kTBPlayerLoadProgressChangedNotification object:nil];
+    [[NSNotificationCenter defaultCenter] postNotificationName:kHCDPlayerLoadProgressChangedNotification object:nil];
 }
 
 - (void)setState:(HCDPlayerState)state
 {
     if (state != HCDPlayerStateBuffering) {
 //        [[XCHudHelper sharedInstance] hideHud];
+        [self.actIndicator stopAnimating];
+        self.actIndicator.hidden = YES;
     }
     
     if (_state == state) {
@@ -375,7 +398,7 @@ static NSString *const HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath = @"playb
     }
     
     _state = state;
-    [[NSNotificationCenter defaultCenter] postNotificationName:kTBPlayerStateChangedNotification object:nil];
+    [[NSNotificationCenter defaultCenter] postNotificationName:kHCDPlayerStateChangedNotification object:nil];
     
 }
 
@@ -388,6 +411,14 @@ static NSString *const HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath = @"playb
         _toolView.backgroundColor = [UIColor colorWithRed:0.0 green:0.0 blue:0.0 alpha:0.5];
     }
     return _toolView;
+}
+
+- (UIView *)touchView {
+    if (!_touchView) {
+        _touchView = [[UIView alloc] init];
+        _touchView.backgroundColor = [UIColor clearColor];
+    }
+    return _touchView;
 }
 
 - (UILabel *)currentTimeLbl {
@@ -461,9 +492,18 @@ static NSString *const HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath = @"playb
     return _screenButton;
 }
 
+- (UIActivityIndicatorView *)actIndicator {
+    if (!_actIndicator) {
+        _actIndicator = [[UIActivityIndicatorView alloc]init];
+    }
+    return _actIndicator;
+}
+
 #pragma mark - 设置进度条、暂停、全屏等组件
 
 - (void)setVideoToolView {
+    
+    _showView.userInteractionEnabled = YES;
     
     self.toolView.frame = CGRectMake(0, CGRectGetHeight(_showView.frame) - 44, CGRectGetWidth(_showView.frame), 44);
     [_showView addSubview:self.toolView];
@@ -486,6 +526,65 @@ static NSString *const HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath = @"playb
     
     self.playSlider.frame = CGRectMake(CGRectGetMaxX(self.currentTimeLbl.frame), 0, playSliderWidth, 44);
     [self.toolView addSubview:self.playSlider];
+    
+    self.actIndicator.frame = CGRectMake((CGRectGetWidth(_showView.frame) - 37) / 2, (CGRectGetHeight(_showView.frame) - 37) / 2, 37, 37);
+    [_showView addSubview:self.actIndicator];
+    
+    self.touchView.frame = CGRectMake(0, 0, CGRectGetWidth(_showView.frame), CGRectGetHeight(_showView.frame) - 44);
+    [_showView addSubview:self.touchView];
+    
+    UITapGestureRecognizer * tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapAction:)];
+//    tap.numberOfTapsRequired = 2;
+//    tap.numberOfTouchesRequired = 1;
+    tap.delegate = self;
+    [self.touchView addGestureRecognizer:tap];
+}
+
+#pragma mark - UIGestureRecognizerDelegate
+
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch{
+    return YES;
+}
+
+- (void)tapAction:(UITapGestureRecognizer *)tap{
+    //点击一次
+    if (tap.numberOfTapsRequired == 1) {
+        if (self.toolView.hidden) {
+            [self toolViewOutHidden];
+        } else {
+            [self toolViewHidden];
+        }
+    } else if(tap.numberOfTapsRequired == 2){
+        [self resumeOrPause];
+    }
+}
+
+
+
+#pragma mark - 控制条隐藏
+
+- (void)toolViewHidden {
+    self.toolView.hidden = YES;
+    if (_isFullScreen) {
+        [[UIApplication sharedApplication] setStatusBarHidden:YES];
+    }
+    [_hiddenTimer invalidate];
+}
+
+#pragma mark - 控制条退出隐藏
+
+- (void)toolViewOutHidden {
+    self.toolView.hidden = NO;
+    
+    if ([UIApplication sharedApplication].statusBarHidden) {
+        [[UIApplication sharedApplication] setStatusBarHidden:NO];
+    }
+    if (!_hiddenTimer.valid) {
+        _hiddenTimer = [NSTimer scheduledTimerWithTimeInterval:5.0 target:self selector:@selector(toolViewHidden) userInfo:nil repeats:NO];
+    }else{
+        [_hiddenTimer invalidate];
+        _hiddenTimer = [NSTimer scheduledTimerWithTimeInterval:5.0 target:self selector:@selector(toolViewHidden) userInfo:nil repeats:NO];
+    }
 }
 
 #pragma mark - 事件响应
@@ -559,6 +658,11 @@ static NSString *const HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath = @"playb
         [_stopButton setImage:[UIImage imageNamed:@"icon_pause_hl"] forState:UIControlStateHighlighted];
         [self.player play];
         self.state = HCDPlayerStatePlaying;
+    } else if (self.state == HCDPlayerStateFinish) {
+        [_stopButton setImage:[UIImage imageNamed:@"icon_pause"] forState:UIControlStateNormal];
+        [_stopButton setImage:[UIImage imageNamed:@"icon_pause_hl"] forState:UIControlStateHighlighted];
+        [self seekToTime:0.0];
+        self.state = HCDPlayerStatePlaying;
     }
     self.isPauseByUser = YES;
 }
@@ -596,9 +700,8 @@ static NSString *const HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath = @"playb
     self.state = HCDPlayerStateStopped;
     [self.player pause];
     [self releasePlayer];
-    [[NSNotificationCenter defaultCenter] postNotificationName:kTBPlayerProgressChangedNotification object:nil];
+    [[NSNotificationCenter defaultCenter] postNotificationName:kHCDPlayerProgressChangedNotification object:nil];
 }
-
 
 - (CGFloat)progress
 {
@@ -626,7 +729,7 @@ static NSString *const HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath = @"playb
     self.currentPlayerItem = nil;
 }
 
-#pragma mark - TBloaderURLConnectionDelegate
+#pragma mark - HCDLoaderURLConnectionDelegate
 
 - (void)didFinishLoadingWithTask:(HcdVideoRequestTask *)task
 {
@@ -665,6 +768,84 @@ static NSString *const HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath = @"playb
     NSLog(@"%@", str);
 //    [XCHudHelper showMessage:str];
     
+}
+
+#pragma mark - 全屏旋转处理
+
+- (void)toOrientation:(UIInterfaceOrientation)orientation {
+    UIInterfaceOrientation currentOrientation = [UIApplication sharedApplication].statusBarOrientation;
+    if (currentOrientation == orientation) {
+        return;
+    }
+    
+    if (orientation == UIInterfaceOrientationPortrait || orientation == UIInterfaceOrientationPortraitUpsideDown) {
+        [self.showView removeFromSuperview];
+        [self.playerSuperView addSubview:self.showView];
+        __weak HcdCacheVideoPlayer * weakSelf = self;
+        [self.showView mas_remakeConstraints:^(MASConstraintMaker *make) {
+            make.top.equalTo(weakSelf.playerSuperView).with.offset(60);
+            make.left.equalTo(weakSelf.playerSuperView);
+            make.right.equalTo(weakSelf.playerSuperView);
+            //添加竖屏时的限制, 这条也是固定的, 因为: _videoHeight 是float* 类型, 我可以通过它, 动态改视频播放器的高度;
+            make.height.equalTo(@280);
+        }];
+    } else {
+        if (currentOrientation == UIInterfaceOrientationPortrait || currentOrientation == UIInterfaceOrientationPortraitUpsideDown) {
+            [self.showView removeFromSuperview];
+            [[[UIApplication sharedApplication].delegate window] addSubview:self.showView];
+            [self.showView mas_remakeConstraints:^(MASConstraintMaker *make) {
+                make.width.equalTo(@(kScreenHeight));
+                make.height.equalTo(@(kScreenWidth));
+                make.center.equalTo([[UIApplication sharedApplication].delegate window]);
+            }];
+        }
+    }
+    
+    [[UIApplication sharedApplication] setStatusBarOrientation:orientation animated:YES];
+    [UIView beginAnimations:nil context:nil];
+    //旋转视频播放的view和显示亮度的view
+    self.showView.transform = [self getOrientation];
+    [UIView setAnimationDuration:0.5];
+    [UIView commitAnimations];
+}
+
+//根据状态条旋转的方向来旋转 avplayerView
+-(CGAffineTransform)getOrientation{
+    UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
+    
+    if (orientation == UIInterfaceOrientationPortrait) {
+        [self toPortraitUpdate];
+        return CGAffineTransformIdentity;
+    }else if (orientation == UIInterfaceOrientationLandscapeLeft){
+        [self toLandscapeUpdate];
+        return CGAffineTransformMakeRotation(-M_PI_2);
+    }else if(orientation == UIInterfaceOrientationLandscapeRight){
+        [self toLandscapeUpdate];
+        return CGAffineTransformMakeRotation(M_PI_2);
+    }
+    return CGAffineTransformIdentity;
+}
+
+-(void)toPortraitUpdate{
+    _isFullScreen = NO;
+    self.toolView.hidden = YES;
+    //处理状态条
+    [[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleDefault];
+    if ([UIApplication sharedApplication].statusBarHidden) {
+        [[UIApplication sharedApplication] setStatusBarHidden:NO];
+    }
+}
+
+-(void)toLandscapeUpdate{
+    _isFullScreen = YES;
+    
+    //处理状态条
+    [[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleLightContent];
+    if (self.toolView.hidden) {
+        [[UIApplication sharedApplication] setStatusBarHidden:YES];
+    }else{
+        [[UIApplication sharedApplication] setStatusBarHidden:NO];
+    }
 }
 
 @end
