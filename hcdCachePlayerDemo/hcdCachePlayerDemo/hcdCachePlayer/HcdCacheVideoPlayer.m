@@ -60,6 +60,7 @@ static NSString *const HCDVideoPlayerItemPresentationSizeKeyPath = @"presentatio
 @property (nonatomic, assign) BOOL           isFinishLoad;            //是否下载完毕
 
 @property (nonatomic, weak  ) UIView         *showView;
+@property (nonatomic, assign) CGRect         showViewRect;            //视频展示ViewRect
 @property (nonatomic, strong) HcdPlayerView  *playerView;
 @property (nonatomic, strong) UIView         *touchView;              //事件响应View
 @property (nonatomic, weak  ) UIView         *playerSuperView;        //播放界面的父页面
@@ -104,8 +105,25 @@ static NSString *const HCDVideoPlayerItemPresentationSizeKeyPath = @"presentatio
         _state = HCDPlayerStateStopped;
         _stopInBackground = YES;
         _isFullScreen = NO;
-        _canFullScreen = NO;
-        _currentOrientation = UIInterfaceOrientationPortrait;
+        _canFullScreen = YES;
+        
+        UIDeviceOrientation orientation = [[UIDevice currentDevice] orientation];
+        switch (orientation) {
+            case UIDeviceOrientationPortrait:
+                _currentOrientation = UIInterfaceOrientationPortrait;
+                break;
+            case UIDeviceOrientationLandscapeLeft:
+                _currentOrientation = UIInterfaceOrientationLandscapeLeft;
+                break;
+            case UIDeviceOrientationLandscapeRight:
+                _currentOrientation = UIInterfaceOrientationLandscapeRight;
+                break;
+            case UIDeviceOrientationPortraitUpsideDown:
+                _currentOrientation = UIInterfaceOrientationPortraitUpsideDown;
+                break;
+            default:
+                break;
+        }
     }
     return self;
 }
@@ -121,6 +139,7 @@ static NSString *const HCDVideoPlayerItemPresentationSizeKeyPath = @"presentatio
     self.current  = 0;
     
     _showView = showView;
+    _showViewRect = showView.frame;
     _showView.backgroundColor = [UIColor blueColor];
     _playerSuperView = superView;
     
@@ -184,6 +203,8 @@ static NSString *const HCDVideoPlayerItemPresentationSizeKeyPath = @"presentatio
     }
     
     [self setVideoToolView];
+    
+    [self updateOrientation];
 }
 
 
@@ -892,6 +913,10 @@ static NSString *const HCDVideoPlayerItemPresentationSizeKeyPath = @"presentatio
 
 #pragma mark - 通知中心检测到屏幕旋转
 -(void)orientationChanged:(NSNotification *)notification{
+    [self updateOrientation];
+}
+
+- (void)updateOrientation {
     UIDeviceOrientation orientation = [[UIDevice currentDevice] orientation];
     switch (orientation) {
         case UIDeviceOrientationPortrait:
@@ -929,22 +954,19 @@ static NSString *const HCDVideoPlayerItemPresentationSizeKeyPath = @"presentatio
         [self.playerSuperView addSubview:self.showView];
         __weak HcdCacheVideoPlayer * weakSelf = self;
         [self.showView mas_remakeConstraints:^(MASConstraintMaker *make) {
-            make.top.equalTo(weakSelf.playerSuperView);
-            make.left.equalTo(weakSelf.playerSuperView);
-            make.right.equalTo(weakSelf.playerSuperView);
-            make.height.mas_equalTo(kScreenWidth * 0.5625);
+            make.top.mas_equalTo(CGRectGetMinY(weakSelf.showViewRect));
+            make.left.mas_equalTo(CGRectGetMinX(weakSelf.showViewRect));
+            make.width.mas_equalTo(CGRectGetWidth(weakSelf.showViewRect));
+            make.height.mas_equalTo(CGRectGetHeight(weakSelf.showViewRect));
         }];
-    } else {
-        if (_currentOrientation == UIInterfaceOrientationPortrait || _currentOrientation == UIInterfaceOrientationPortraitUpsideDown) {
-            [self.showView removeFromSuperview];
-            [[[UIApplication sharedApplication].delegate window] addSubview:self.showView];
-            [self.showView mas_remakeConstraints:^(MASConstraintMaker *make) {
-                make.width.equalTo(@(kScreenHeight));
-                make.height.equalTo(@(kScreenWidth));
-                make.center.equalTo([[UIApplication sharedApplication].delegate window]);
-            }];
-            
-        }
+    } else if (orientation == UIInterfaceOrientationLandscapeLeft || orientation == UIInterfaceOrientationLandscapeRight) {
+        [self.showView removeFromSuperview];
+        [[[UIApplication sharedApplication].delegate window] addSubview:self.showView];
+        [self.showView mas_remakeConstraints:^(MASConstraintMaker *make) {
+            make.width.equalTo(@(kScreenHeight));
+            make.height.equalTo(@(kScreenWidth));
+            make.center.equalTo([[UIApplication sharedApplication].delegate window]);
+        }];
     }
     
     _currentOrientation = orientation;
@@ -970,12 +992,15 @@ static NSString *const HCDVideoPlayerItemPresentationSizeKeyPath = @"presentatio
     if (orientation == UIInterfaceOrientationPortrait) {
         [self toPortraitUpdate];
         return CGAffineTransformIdentity;
-    }else if (orientation == UIInterfaceOrientationLandscapeLeft){
+    } else if (orientation == UIInterfaceOrientationLandscapeLeft){
         [self toLandscapeUpdate];
         return CGAffineTransformMakeRotation(-M_PI_2);
-    }else if(orientation == UIInterfaceOrientationLandscapeRight){
+    } else if (orientation == UIInterfaceOrientationLandscapeRight){
         [self toLandscapeUpdate];
         return CGAffineTransformMakeRotation(M_PI_2);
+    } else if (orientation == UIInterfaceOrientationPortraitUpsideDown) {
+        [self toPortraitUpdate];
+        return CGAffineTransformMakeRotation(M_PI);
     }
     return CGAffineTransformIdentity;
 }
