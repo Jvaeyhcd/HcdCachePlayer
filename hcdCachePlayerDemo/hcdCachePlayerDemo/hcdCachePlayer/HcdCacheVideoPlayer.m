@@ -22,6 +22,7 @@
 #import "HcdLoaderURLConnection.h"
 #import "NSString+MD5.h"
 #import "Masonry.h"
+#import "HcdPlayerView.h"
 
 #define kScreenHeight ([UIScreen mainScreen].bounds.size.height)
 #define kScreenWidth ([UIScreen mainScreen].bounds.size.width)
@@ -34,11 +35,13 @@ static NSString *const HCDVideoPlayerItemStatusKeyPath = @"status";
 static NSString *const HCDVideoPlayerItemLoadedTimeRangesKeyPath = @"loadedTimeRanges";
 static NSString *const HCDVideoPlayerItemPlaybackBufferEmptyKeyPath = @"playbackBufferEmpty";
 static NSString *const HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath = @"playbackLikelyToKeepUp";
+static NSString *const HCDVideoPlayerItemPresentationSizeKeyPath = @"presentationSize";
 
 @interface HcdCacheVideoPlayer()<HCDLoaderURLConnectionDelegate, UIGestureRecognizerDelegate>
 {
     //用来控制上下菜单view隐藏的timer
     NSTimer * _hiddenTimer;
+    UIInterfaceOrientation _currentOrientation;
 }
 
 @property (nonatomic, assign) HCDPlayerState state;
@@ -50,16 +53,18 @@ static NSString *const HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath = @"playb
 @property (nonatomic, strong) AVAsset        *videoAsset;
 @property (nonatomic, strong) AVPlayer       *player;
 @property (nonatomic, strong) AVPlayerItem   *currentPlayerItem;
-@property (nonatomic, strong) AVPlayerLayer  *currentPlayerLayer;
+//@property (nonatomic, strong) AVPlayerLayer  *currentPlayerLayer;
 @property (nonatomic, strong) NSObject       *playbackTimeObserver;
 @property (nonatomic, assign) BOOL           isPauseByUser;           //是否被用户暂停
 @property (nonatomic, assign) BOOL           isLocalVideo;            //是否播放本地文件
 @property (nonatomic, assign) BOOL           isFinishLoad;            //是否下载完毕
 
 @property (nonatomic, weak  ) UIView         *showView;
+@property (nonatomic, strong) HcdPlayerView  *playerView;
 @property (nonatomic, strong) UIView         *touchView;              //事件响应View
 @property (nonatomic, weak  ) UIView         *playerSuperView;        //播放界面的父页面
 
+@property (nonatomic, strong) UIView         *statusBarBgView;        //全屏状态栏的背景view
 @property (nonatomic, strong) UIView         *toolView;
 @property (nonatomic, strong) UILabel        *currentTimeLbl;
 @property (nonatomic, strong) UILabel        *totalTimeLbl;
@@ -68,6 +73,7 @@ static NSString *const HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath = @"playb
 @property (nonatomic, strong) UIButton       *stopButton;             //播放暂停按钮
 @property (nonatomic, strong) UIButton       *screenButton;           //全屏按钮
 @property (nonatomic, assign) BOOL           isFullScreen;
+@property (nonatomic, assign) BOOL           canFullScreen;
 @property (nonatomic, strong) UIActivityIndicatorView *actIndicator;  //加载视频时的旋转菊花
 
 @property (nonatomic, strong) HcdLoaderURLConnection *resouerLoader;
@@ -97,6 +103,9 @@ static NSString *const HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath = @"playb
         _current  = 0;
         _state = HCDPlayerStateStopped;
         _stopInBackground = YES;
+        _isFullScreen = NO;
+        _canFullScreen = NO;
+        _currentOrientation = UIInterfaceOrientationPortrait;
     }
     return self;
 }
@@ -138,16 +147,19 @@ static NSString *const HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath = @"playb
     } else {
         [self.player replaceCurrentItemWithPlayerItem:self.currentPlayerItem];
     }
-    self.currentPlayerLayer       = [AVPlayerLayer playerLayerWithPlayer:self.player];
-    self.currentPlayerLayer.frame = CGRectMake(0, 44, showView.bounds.size.width, showView.bounds.size.height - 44);
-    self.currentPlayerLayer.videoGravity = AVLayerVideoGravityResizeAspect;
+//    self.currentPlayerLayer       = [AVPlayerLayer playerLayerWithPlayer:self.player];
+//    self.currentPlayerLayer.frame = CGRectMake(0, 44, showView.bounds.size.width, showView.bounds.size.height - 44);
+//    self.currentPlayerLayer.videoGravity = AVLayerVideoGravityResizeAspect;
+//    
+//    [showView.layer addSublayer:self.currentPlayerLayer];
     
-    [showView.layer addSublayer:self.currentPlayerLayer];
+    [(AVPlayerLayer *)self.playerView.layer setPlayer:self.player];
     
     [self.currentPlayerItem addObserver:self forKeyPath:HCDVideoPlayerItemStatusKeyPath options:NSKeyValueObservingOptionNew context:nil];
     [self.currentPlayerItem addObserver:self forKeyPath:HCDVideoPlayerItemLoadedTimeRangesKeyPath options:NSKeyValueObservingOptionNew context:nil];
     [self.currentPlayerItem addObserver:self forKeyPath:HCDVideoPlayerItemPlaybackBufferEmptyKeyPath options:NSKeyValueObservingOptionNew context:nil];
     [self.currentPlayerItem addObserver:self forKeyPath:HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath options:NSKeyValueObservingOptionNew context:nil];
+    [self.currentPlayerItem addObserver:self forKeyPath:HCDVideoPlayerItemPresentationSizeKeyPath options:NSKeyValueObservingOptionNew context:nil];
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appDidEnterBackground) name:UIApplicationWillResignActiveNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appDidEnterPlayGround) name:UIApplicationDidBecomeActiveNotification object:nil];
@@ -293,6 +305,17 @@ static NSString *const HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath = @"playb
         }
     } else if ([HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath isEqualToString:keyPath]) {
         NSLog(@"HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath");
+    } else if ([HCDVideoPlayerItemPresentationSizeKeyPath isEqualToString:keyPath]) {
+        CGSize size = self.currentPlayerItem.presentationSize;
+        static float staticHeight = 0;
+        staticHeight = size.height/size.width * kScreenWidth;
+        NSLog(@"%f", staticHeight);
+        
+        //用来监测屏幕旋转
+        [[UIDevice currentDevice] beginGeneratingDeviceOrientationNotifications];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(orientationChanged:) name:UIDeviceOrientationDidChangeNotification object:nil];
+        
+        _canFullScreen = YES;
     }
 }
 
@@ -404,6 +427,22 @@ static NSString *const HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath = @"playb
 
 #pragma mark - 界面控件初始化
 
+- (HcdPlayerView *)playerView {
+    if (!_playerView) {
+        _playerView = [[HcdPlayerView alloc]init];
+    }
+    return _playerView;
+}
+
+- (UIView *)statusBarBgView {
+    if (!_statusBarBgView) {
+        _statusBarBgView = [[UIView alloc]init];
+        _statusBarBgView.backgroundColor = [UIColor blackColor];
+        _statusBarBgView.hidden = YES;
+    }
+    return _statusBarBgView;
+}
+
 - (UIView *)toolView {
     
     if (!_toolView) {
@@ -503,35 +542,108 @@ static NSString *const HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath = @"playb
 
 - (void)setVideoToolView {
     
+    __weak HcdCacheVideoPlayer * weakSelf = self;
+    
     _showView.userInteractionEnabled = YES;
+    
+//    self.playerView.frame = CGRectMake(0, 0, CGRectGetWidth(_showView.frame), CGRectGetHeight(_showView.frame));
+    [_showView addSubview:self.playerView];
+    [self.playerView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.mas_equalTo(0);
+        make.right.mas_equalTo(0);
+        make.bottom.mas_equalTo(0);
+        make.left.mas_equalTo(0);
+    }];
+    
+    [_showView addSubview:self.statusBarBgView];
+    [self.statusBarBgView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.left.mas_equalTo(0);
+        make.top.mas_equalTo(0);
+        make.right.mas_equalTo(0);
+        make.height.mas_equalTo(20);
+    }];
     
     self.toolView.frame = CGRectMake(0, CGRectGetHeight(_showView.frame) - 44, CGRectGetWidth(_showView.frame), 44);
     [_showView addSubview:self.toolView];
-    
-    self.currentTimeLbl.frame = CGRectMake(44, 0, 52, 44);
-    [self.toolView addSubview:self.currentTimeLbl];
-    
-    self.totalTimeLbl.frame = CGRectMake(CGRectGetWidth(self.toolView.frame) - 52 - 44, 0, 52, 44);
-    [self.toolView addSubview:self.totalTimeLbl];
+    [self.toolView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.left.mas_equalTo(0);
+        make.bottom.equalTo(weakSelf.showView);
+        make.right.mas_equalTo(0);
+        make.height.mas_equalTo(44);
+    }];
     
     self.stopButton.frame = CGRectMake(0, 0, 44, 44);
     [self.toolView addSubview:self.stopButton];
+    [self.stopButton mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.mas_equalTo(0);
+        make.left.mas_equalTo(0);
+        make.width.mas_equalTo(44);
+        make.height.mas_equalTo(44);
+    }];
     
     self.screenButton.frame = CGRectMake(CGRectGetWidth(self.toolView.frame) - 44, 0, 44, 44);
     [self.toolView addSubview:self.screenButton];
+    [self.screenButton mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.mas_equalTo(0);
+        make.right.mas_equalTo(0);
+        make.width.mas_equalTo(44);
+        make.height.mas_equalTo(44);
+    }];
+    
+    self.currentTimeLbl.frame = CGRectMake(44, 0, 52, 44);
+    [self.toolView addSubview:self.currentTimeLbl];
+    [self.currentTimeLbl mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.left.mas_equalTo(44);
+        make.top.mas_equalTo(0);
+        make.width.mas_equalTo(52);
+        make.height.mas_equalTo(44);
+    }];
+    
+    self.totalTimeLbl.frame = CGRectMake(CGRectGetWidth(self.toolView.frame) - 52 - 44, 0, 52, 44);
+    [self.toolView addSubview:self.totalTimeLbl];
+    [self.totalTimeLbl mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.mas_equalTo(0);
+        make.right.equalTo(weakSelf.screenButton.mas_left);
+        make.width.mas_equalTo(52);
+        make.height.mas_equalTo(44);
+    }];
     
     CGFloat playSliderWidth = CGRectGetWidth(self.toolView.frame) - 2 * CGRectGetMaxX(self.currentTimeLbl.frame);
     self.videoProgressView.frame = CGRectMake(CGRectGetMaxX(self.currentTimeLbl.frame), 21, playSliderWidth, 20);
     [self.toolView addSubview:self.videoProgressView];
+    [self.videoProgressView mas_remakeConstraints:^(MASConstraintMaker *make) {
+        make.left.equalTo(weakSelf.currentTimeLbl.mas_right);
+        make.right.equalTo(weakSelf.totalTimeLbl.mas_left);
+        make.centerY.equalTo(weakSelf.totalTimeLbl.mas_centerY);
+        make.height.mas_equalTo(1);
+    }];
     
     self.playSlider.frame = CGRectMake(CGRectGetMaxX(self.currentTimeLbl.frame), 0, playSliderWidth, 44);
     [self.toolView addSubview:self.playSlider];
+    [self.playSlider mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.left.equalTo(weakSelf.currentTimeLbl.mas_right);
+        make.top.mas_equalTo(0);
+        make.right.equalTo(weakSelf.totalTimeLbl.mas_left);
+        make.bottom.mas_equalTo(0);
+    }];
     
     self.actIndicator.frame = CGRectMake((CGRectGetWidth(_showView.frame) - 37) / 2, (CGRectGetHeight(_showView.frame) - 37) / 2, 37, 37);
     [_showView addSubview:self.actIndicator];
+    [self.actIndicator mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.centerX.equalTo(weakSelf.playerView);
+        make.centerY.equalTo(weakSelf.playerView);
+        make.width.mas_equalTo(44);
+        make.height.mas_equalTo(44);
+    }];
     
     self.touchView.frame = CGRectMake(0, 0, CGRectGetWidth(_showView.frame), CGRectGetHeight(_showView.frame) - 44);
     [_showView addSubview:self.touchView];
+    [self.touchView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.equalTo(weakSelf.playerView);
+        make.left.equalTo(weakSelf.playerView);
+        make.right.equalTo(weakSelf.playerView);
+        make.bottom.equalTo(weakSelf.playerView).offset(-44);
+    }];
     
     UITapGestureRecognizer * tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapAction:)];
 //    tap.numberOfTapsRequired = 2;
@@ -565,6 +677,8 @@ static NSString *const HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath = @"playb
 
 - (void)toolViewHidden {
     self.toolView.hidden = YES;
+    self.statusBarBgView.hidden = YES;
+    
     if (_isFullScreen) {
         [[UIApplication sharedApplication] setStatusBarHidden:YES];
     }
@@ -575,6 +689,12 @@ static NSString *const HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath = @"playb
 
 - (void)toolViewOutHidden {
     self.toolView.hidden = NO;
+    
+    if (_isFullScreen) {
+        self.statusBarBgView.hidden = NO;
+    } else {
+        self.statusBarBgView.hidden = YES;
+    }
     
     if ([UIApplication sharedApplication].statusBarHidden) {
         [[UIApplication sharedApplication] setStatusBarHidden:NO];
@@ -770,11 +890,37 @@ static NSString *const HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath = @"playb
     
 }
 
+#pragma mark - 通知中心检测到屏幕旋转
+-(void)orientationChanged:(NSNotification *)notification{
+    UIDeviceOrientation orientation = [[UIDevice currentDevice] orientation];
+    switch (orientation) {
+        case UIDeviceOrientationPortrait:
+            [self toOrientation:UIInterfaceOrientationPortrait];
+            break;
+        case UIDeviceOrientationLandscapeLeft:
+            [self toOrientation:UIInterfaceOrientationLandscapeRight];
+            break;
+        case UIDeviceOrientationLandscapeRight:
+            [self toOrientation:UIInterfaceOrientationLandscapeLeft];
+            break;
+        case UIDeviceOrientationPortraitUpsideDown:
+            [self toOrientation:UIInterfaceOrientationPortraitUpsideDown];
+            break;
+        default:
+            break;
+    }
+}
+
 #pragma mark - 全屏旋转处理
 
 - (void)toOrientation:(UIInterfaceOrientation)orientation {
-    UIInterfaceOrientation currentOrientation = [UIApplication sharedApplication].statusBarOrientation;
-    if (currentOrientation == orientation) {
+    
+    if (!_canFullScreen) {
+        return;
+    }
+    
+//    UIInterfaceOrientation currentOrientation = [UIApplication sharedApplication].statusBarOrientation;
+    if (_currentOrientation == orientation) {
         return;
     }
     
@@ -783,14 +929,13 @@ static NSString *const HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath = @"playb
         [self.playerSuperView addSubview:self.showView];
         __weak HcdCacheVideoPlayer * weakSelf = self;
         [self.showView mas_remakeConstraints:^(MASConstraintMaker *make) {
-            make.top.equalTo(weakSelf.playerSuperView).with.offset(60);
+            make.top.equalTo(weakSelf.playerSuperView);
             make.left.equalTo(weakSelf.playerSuperView);
             make.right.equalTo(weakSelf.playerSuperView);
-            //添加竖屏时的限制, 这条也是固定的, 因为: _videoHeight 是float* 类型, 我可以通过它, 动态改视频播放器的高度;
-            make.height.equalTo(@280);
+            make.height.mas_equalTo(kScreenWidth * 0.5625);
         }];
     } else {
-        if (currentOrientation == UIInterfaceOrientationPortrait || currentOrientation == UIInterfaceOrientationPortraitUpsideDown) {
+        if (_currentOrientation == UIInterfaceOrientationPortrait || _currentOrientation == UIInterfaceOrientationPortraitUpsideDown) {
             [self.showView removeFromSuperview];
             [[[UIApplication sharedApplication].delegate window] addSubview:self.showView];
             [self.showView mas_remakeConstraints:^(MASConstraintMaker *make) {
@@ -798,20 +943,29 @@ static NSString *const HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath = @"playb
                 make.height.equalTo(@(kScreenWidth));
                 make.center.equalTo([[UIApplication sharedApplication].delegate window]);
             }];
+            
         }
     }
     
-    [[UIApplication sharedApplication] setStatusBarOrientation:orientation animated:YES];
-    [UIView beginAnimations:nil context:nil];
-    //旋转视频播放的view和显示亮度的view
-    self.showView.transform = [self getOrientation];
-    [UIView setAnimationDuration:0.5];
-    [UIView commitAnimations];
+    _currentOrientation = orientation;
+    
+//    
+//    [UIView beginAnimations:nil context:nil];
+//    
+//    [UIView setAnimationDuration:0.5];
+//    [UIView commitAnimations];
+    [UIView animateWithDuration:0.5 animations:^{
+        [[UIApplication sharedApplication] setStatusBarOrientation:_currentOrientation animated:YES];
+        //旋转视频播放的view和显示亮度的view
+        self.showView.transform = [self getOrientation:orientation];
+    } completion:^(BOOL finished) {
+        
+    }];
 }
 
 //根据状态条旋转的方向来旋转 avplayerView
--(CGAffineTransform)getOrientation{
-    UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
+-(CGAffineTransform)getOrientation:(UIInterfaceOrientation)orientation{
+//    UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
     
     if (orientation == UIInterfaceOrientationPortrait) {
         [self toPortraitUpdate];

@@ -29,7 +29,7 @@
     playSoundBtn.backgroundColor = [UIColor greenColor];
     
     HcdCacheVideoPlayer *play = [HcdCacheVideoPlayer sharedInstance];
-    UIView *videoView = [[UIView alloc]initWithFrame:CGRectMake(0, 0, [UIScreen mainScreen].bounds.size.width, 300)];
+    UIView *videoView = [[UIView alloc]initWithFrame:CGRectMake(0, 64, [UIScreen mainScreen].bounds.size.width, [UIScreen mainScreen].bounds.size.width * 0.5625)];
     [self.view addSubview:videoView];
     
     [play playWithUrl:[NSURL URLWithString:@"http://7xsnx0.com2.z0.glb.qiniucdn.com/14651947751451.mp4"] showView:videoView andSuperView:self.view];
@@ -40,6 +40,11 @@
 - (void)playSound {
     [HcdAudioPlayer sharedInstance].isRepeat = YES;
     [[HcdAudioPlayer sharedInstance] manageAudioWithUrlPath:@"http://7xsnx0.com2.z0.glb.qiniucdn.com/14649451543248.mp3" playOrPause:YES];
+}
+
+#pragma mark - 关闭设备自动旋转, 然后手动监测设备旋转方向来旋转avplayerView
+-(BOOL)shouldAutorotate{
+    return NO;
 }
 
 - (void)didReceiveMemoryWarning {

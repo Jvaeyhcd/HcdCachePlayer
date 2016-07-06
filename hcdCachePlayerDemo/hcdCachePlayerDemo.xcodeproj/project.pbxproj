@@ -34,6 +34,7 @@
 		0CCC799D1D2B950900328529 /* NSLayoutConstraint+MASDebugAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CCC798F1D2B950900328529 /* NSLayoutConstraint+MASDebugAdditions.m */; };
 		0CCC799E1D2B950900328529 /* View+MASAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CCC79911D2B950900328529 /* View+MASAdditions.m */; };
 		0CCC799F1D2B950900328529 /* ViewController+MASAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CCC79941D2B950900328529 /* ViewController+MASAdditions.m */; };
+		0CCC79A21D2C905A00328529 /* HcdPlayerView.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CCC79A11D2C905A00328529 /* HcdPlayerView.m */; };
 		0CD99F6C1D29F75B0069E8B0 /* HcdCacheVideoPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CD99F6B1D29F75B0069E8B0 /* HcdCacheVideoPlayer.m */; };
 		0CD99F831D2A36DE0069E8B0 /* HcdVideoRequestTask.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CD99F821D2A36DE0069E8B0 /* HcdVideoRequestTask.m */; };
 		0CD99F861D2A3E200069E8B0 /* HcdLoaderURLConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CD99F851D2A3E200069E8B0 /* HcdLoaderURLConnection.m */; };
@@ -89,6 +90,8 @@
 		0CCC79921D2B950900328529 /* View+MASShorthandAdditions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "View+MASShorthandAdditions.h"; sourceTree = "<group>"; };
 		0CCC79931D2B950900328529 /* ViewController+MASAdditions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "ViewController+MASAdditions.h"; sourceTree = "<group>"; };
 		0CCC79941D2B950900328529 /* ViewController+MASAdditions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "ViewController+MASAdditions.m"; sourceTree = "<group>"; };
+		0CCC79A01D2C905A00328529 /* HcdPlayerView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HcdPlayerView.h; sourceTree = "<group>"; };
+		0CCC79A11D2C905A00328529 /* HcdPlayerView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HcdPlayerView.m; sourceTree = "<group>"; };
 		0CD99F6A1D29F75B0069E8B0 /* HcdCacheVideoPlayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HcdCacheVideoPlayer.h; sourceTree = "<group>"; };
 		0CD99F6B1D29F75B0069E8B0 /* HcdCacheVideoPlayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HcdCacheVideoPlayer.m; sourceTree = "<group>"; };
 		0CD99F811D2A36DE0069E8B0 /* HcdVideoRequestTask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HcdVideoRequestTask.h; sourceTree = "<group>"; };
@@ -168,6 +171,8 @@
 				0CD99F8A1D2A52BF0069E8B0 /* NSString+MD5.m */,
 				0CD99F6A1D29F75B0069E8B0 /* HcdCacheVideoPlayer.h */,
 				0CD99F6B1D29F75B0069E8B0 /* HcdCacheVideoPlayer.m */,
+				0CCC79A01D2C905A00328529 /* HcdPlayerView.h */,
+				0CCC79A11D2C905A00328529 /* HcdPlayerView.m */,
 				0CD99F811D2A36DE0069E8B0 /* HcdVideoRequestTask.h */,
 				0CD99F821D2A36DE0069E8B0 /* HcdVideoRequestTask.m */,
 				0CD99F841D2A3E200069E8B0 /* HcdLoaderURLConnection.h */,
@@ -305,6 +310,7 @@
 				0C168D521D2666A50008F58A /* ViewController.m in Sources */,
 				0CD99F6C1D29F75B0069E8B0 /* HcdCacheVideoPlayer.m in Sources */,
 				0CCC799C1D2B950900328529 /* NSArray+MASAdditions.m in Sources */,
+				0CCC79A21D2C905A00328529 /* HcdPlayerView.m in Sources */,
 				0CD99F8B1D2A52BF0069E8B0 /* NSString+MD5.m in Sources */,
 				0CD99F861D2A3E200069E8B0 /* HcdLoaderURLConnection.m in Sources */,
 				0CCC799E1D2B950900328529 /* View+MASAdditions.m in Sources */,
