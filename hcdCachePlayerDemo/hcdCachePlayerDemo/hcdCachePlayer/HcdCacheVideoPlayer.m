@@ -168,7 +168,7 @@ typedef enum : NSUInteger {
     
     _showView = showView;
     _showViewRect = showView.frame;
-    _showView.backgroundColor = [UIColor blueColor];
+    _showView.backgroundColor = [UIColor blackColor];
     _playerSuperView = superView;
     
     NSString *str = [url absoluteString];

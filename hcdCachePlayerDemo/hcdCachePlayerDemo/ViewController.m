@@ -27,6 +27,7 @@
     [playSoundBtn setTitle:@"播放声音" forState:UIControlStateNormal];
     [playSoundBtn addTarget:self action:@selector(playSound) forControlEvents:UIControlEventTouchUpInside];
     playSoundBtn.backgroundColor = [UIColor greenColor];
+    playSoundBtn.hidden = YES;
     
     HcdCacheVideoPlayer *play = [HcdCacheVideoPlayer sharedInstance];
     UIView *videoView = [[UIView alloc]initWithFrame:CGRectMake(0, 64, [UIScreen mainScreen].bounds.size.width, [UIScreen mainScreen].bounds.size.width * 0.5625)];
