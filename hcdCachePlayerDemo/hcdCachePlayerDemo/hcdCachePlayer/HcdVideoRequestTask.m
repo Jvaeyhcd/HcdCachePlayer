@@ -19,7 +19,7 @@
 //
 
 #import "HcdVideoRequestTask.h"
-#import "NSString+MD5.h"
+#import "NSString+HCD.h"
 
 @interface HcdVideoRequestTask()<NSURLConnectionDataDelegate, AVAssetResourceLoaderDelegate>
 

@@ -20,6 +20,7 @@
 
 #import <UIKit/UIKit.h>
 #import <AVFoundation/AVFoundation.h>
+#import <MediaPlayer/MediaPlayer.h>
 
 FOUNDATION_EXPORT NSString *const kHCDPlayerStateChangedNotification;
 FOUNDATION_EXPORT NSString *const kHCDPlayerProgressChangedNotification;

@@ -39,7 +39,12 @@
 		0CD99F831D2A36DE0069E8B0 /* HcdVideoRequestTask.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CD99F821D2A36DE0069E8B0 /* HcdVideoRequestTask.m */; };
 		0CD99F861D2A3E200069E8B0 /* HcdLoaderURLConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CD99F851D2A3E200069E8B0 /* HcdLoaderURLConnection.m */; };
 		0CD99F881D2A45840069E8B0 /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0CD99F871D2A45840069E8B0 /* MobileCoreServices.framework */; };
-		0CD99F8B1D2A52BF0069E8B0 /* NSString+MD5.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CD99F8A1D2A52BF0069E8B0 /* NSString+MD5.m */; };
+		0CD99F8B1D2A52BF0069E8B0 /* NSString+HCD.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CD99F8A1D2A52BF0069E8B0 /* NSString+HCD.m */; };
+		0CDE049F1D2DF9E3009E87ED /* HcdTimeSheetView.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CDE049E1D2DF9E3009E87ED /* HcdTimeSheetView.m */; };
+		0CDE04A21D2DFCAB009E87ED /* progress_icon_l@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 0CDE04A01D2DFCAB009E87ED /* progress_icon_l@2x.png */; };
+		0CDE04A31D2DFCAB009E87ED /* progress_icon_l@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 0CDE04A11D2DFCAB009E87ED /* progress_icon_l@3x.png */; };
+		0CDE04A61D2DFCCF009E87ED /* progress_icon_r@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 0CDE04A41D2DFCCF009E87ED /* progress_icon_r@2x.png */; };
+		0CDE04A71D2DFCCF009E87ED /* progress_icon_r@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 0CDE04A51D2DFCCF009E87ED /* progress_icon_r@3x.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -99,8 +104,14 @@
 		0CD99F841D2A3E200069E8B0 /* HcdLoaderURLConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HcdLoaderURLConnection.h; sourceTree = "<group>"; };
 		0CD99F851D2A3E200069E8B0 /* HcdLoaderURLConnection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HcdLoaderURLConnection.m; sourceTree = "<group>"; };
 		0CD99F871D2A45840069E8B0 /* MobileCoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MobileCoreServices.framework; path = System/Library/Frameworks/MobileCoreServices.framework; sourceTree = SDKROOT; };
-		0CD99F891D2A52BF0069E8B0 /* NSString+MD5.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSString+MD5.h"; sourceTree = "<group>"; };
-		0CD99F8A1D2A52BF0069E8B0 /* NSString+MD5.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSString+MD5.m"; sourceTree = "<group>"; };
+		0CD99F891D2A52BF0069E8B0 /* NSString+HCD.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSString+HCD.h"; sourceTree = "<group>"; };
+		0CD99F8A1D2A52BF0069E8B0 /* NSString+HCD.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSString+HCD.m"; sourceTree = "<group>"; };
+		0CDE049D1D2DF9E3009E87ED /* HcdTimeSheetView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HcdTimeSheetView.h; sourceTree = "<group>"; };
+		0CDE049E1D2DF9E3009E87ED /* HcdTimeSheetView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HcdTimeSheetView.m; sourceTree = "<group>"; };
+		0CDE04A01D2DFCAB009E87ED /* progress_icon_l@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "progress_icon_l@2x.png"; sourceTree = "<group>"; };
+		0CDE04A11D2DFCAB009E87ED /* progress_icon_l@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "progress_icon_l@3x.png"; sourceTree = "<group>"; };
+		0CDE04A41D2DFCCF009E87ED /* progress_icon_r@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "progress_icon_r@2x.png"; sourceTree = "<group>"; };
+		0CDE04A51D2DFCCF009E87ED /* progress_icon_r@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "progress_icon_r@3x.png"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -167,10 +178,12 @@
 			children = (
 				0C168D631D266C7F0008F58A /* HcdAudioPlayer.h */,
 				0C168D641D266C7F0008F58A /* HcdAudioPlayer.m */,
-				0CD99F891D2A52BF0069E8B0 /* NSString+MD5.h */,
-				0CD99F8A1D2A52BF0069E8B0 /* NSString+MD5.m */,
+				0CD99F891D2A52BF0069E8B0 /* NSString+HCD.h */,
+				0CD99F8A1D2A52BF0069E8B0 /* NSString+HCD.m */,
 				0CD99F6A1D29F75B0069E8B0 /* HcdCacheVideoPlayer.h */,
 				0CD99F6B1D29F75B0069E8B0 /* HcdCacheVideoPlayer.m */,
+				0CDE049D1D2DF9E3009E87ED /* HcdTimeSheetView.h */,
+				0CDE049E1D2DF9E3009E87ED /* HcdTimeSheetView.m */,
 				0CCC79A01D2C905A00328529 /* HcdPlayerView.h */,
 				0CCC79A11D2C905A00328529 /* HcdPlayerView.m */,
 				0CD99F811D2A36DE0069E8B0 /* HcdVideoRequestTask.h */,
@@ -192,6 +205,10 @@
 				0CCC796F1D2B3D0700328529 /* icon_play@3x.png */,
 				0CCC79701D2B3D0700328529 /* icon_play_hl@2x.png */,
 				0CCC79711D2B3D0700328529 /* icon_play_hl@3x.png */,
+				0CDE04A01D2DFCAB009E87ED /* progress_icon_l@2x.png */,
+				0CDE04A11D2DFCAB009E87ED /* progress_icon_l@3x.png */,
+				0CDE04A41D2DFCCF009E87ED /* progress_icon_r@2x.png */,
+				0CDE04A51D2DFCCF009E87ED /* progress_icon_r@3x.png */,
 			);
 			path = resource;
 			sourceTree = "<group>";
@@ -289,12 +306,16 @@
 				0CCC79721D2B3D0700328529 /* icon_full@2x.png in Resources */,
 				0CCC79791D2B3D0700328529 /* icon_play_hl@3x.png in Resources */,
 				0CCC79741D2B3D0700328529 /* icon_pause@2x.png in Resources */,
+				0CDE04A21D2DFCAB009E87ED /* progress_icon_l@2x.png in Resources */,
 				0C168D5A1D2666A50008F58A /* LaunchScreen.storyboard in Resources */,
 				0CCC79761D2B3D0700328529 /* icon_play@2x.png in Resources */,
 				0CCC79781D2B3D0700328529 /* icon_play_hl@2x.png in Resources */,
+				0CDE04A71D2DFCCF009E87ED /* progress_icon_r@3x.png in Resources */,
 				0CCC79731D2B3D0700328529 /* icon_full@3x.png in Resources */,
 				0CCC79771D2B3D0700328529 /* icon_play@3x.png in Resources */,
+				0CDE04A61D2DFCCF009E87ED /* progress_icon_r@2x.png in Resources */,
 				0CCC79951D2B950900328529 /* Info.plist in Resources */,
+				0CDE04A31D2DFCAB009E87ED /* progress_icon_l@3x.png in Resources */,
 				0C168D571D2666A50008F58A /* Assets.xcassets in Resources */,
 				0CCC79751D2B3D0700328529 /* icon_pause@3x.png in Resources */,
 			);
@@ -310,8 +331,9 @@
 				0C168D521D2666A50008F58A /* ViewController.m in Sources */,
 				0CD99F6C1D29F75B0069E8B0 /* HcdCacheVideoPlayer.m in Sources */,
 				0CCC799C1D2B950900328529 /* NSArray+MASAdditions.m in Sources */,
+				0CDE049F1D2DF9E3009E87ED /* HcdTimeSheetView.m in Sources */,
 				0CCC79A21D2C905A00328529 /* HcdPlayerView.m in Sources */,
-				0CD99F8B1D2A52BF0069E8B0 /* NSString+MD5.m in Sources */,
+				0CD99F8B1D2A52BF0069E8B0 /* NSString+HCD.m in Sources */,
 				0CD99F861D2A3E200069E8B0 /* HcdLoaderURLConnection.m in Sources */,
 				0CCC799E1D2B950900328529 /* View+MASAdditions.m in Sources */,
 				0CCC79991D2B950900328529 /* MASLayoutConstraint.m in Sources */,

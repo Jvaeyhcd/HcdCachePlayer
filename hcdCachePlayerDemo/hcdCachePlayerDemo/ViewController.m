@@ -9,7 +9,7 @@
 #import "ViewController.h"
 #import "HcdAudioPlayer.h"
 #import "HcdCacheVideoPlayer.h"
-#import "NSString+MD5.h"
+#import "NSString+HCD.h"
 
 @interface ViewController ()
 

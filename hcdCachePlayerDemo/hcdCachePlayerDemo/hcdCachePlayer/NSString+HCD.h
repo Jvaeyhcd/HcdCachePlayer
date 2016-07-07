@@ -8,8 +8,9 @@
 
 #import <Foundation/Foundation.h>
 
-@interface NSString (MD5)
+@interface NSString (HCD)
 
 - (NSString *)stringToMD5;
++ (NSString *)calculateTimeWithTimeFormatter:(long long)timeSecond;
 
 @end

@@ -20,12 +20,15 @@
 
 #import "HcdCacheVideoPlayer.h"
 #import "HcdLoaderURLConnection.h"
-#import "NSString+MD5.h"
+#import "NSString+HCD.h"
 #import "Masonry.h"
 #import "HcdPlayerView.h"
+#import "HcdTimeSheetView.h"
 
 #define kScreenHeight ([UIScreen mainScreen].bounds.size.height)
 #define kScreenWidth ([UIScreen mainScreen].bounds.size.width)
+#define LeastMoveDistance 15
+#define TotalScreenTime 90
 
 NSString *const kHCDPlayerStateChangedNotification    = @"HCDPlayerStateChangedNotification";
 NSString *const kHCDPlayerProgressChangedNotification = @"HCDPlayerProgressChangedNotification";
@@ -37,11 +40,31 @@ static NSString *const HCDVideoPlayerItemPlaybackBufferEmptyKeyPath = @"playback
 static NSString *const HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath = @"playbackLikelyToKeepUp";
 static NSString *const HCDVideoPlayerItemPresentationSizeKeyPath = @"presentationSize";
 
+typedef enum : NSUInteger {
+    HCDPlayerControlTypeProgress,
+    HCDPlayerControlTypeVoice,
+    HCDPlayerControlTypeLight,
+    HCDPlayerControlTypeNone = 999,
+} HCDPlayerControlType;
+
 @interface HcdCacheVideoPlayer()<HCDLoaderURLConnectionDelegate, UIGestureRecognizerDelegate>
 {
     //用来控制上下菜单view隐藏的timer
     NSTimer * _hiddenTimer;
     UIInterfaceOrientation _currentOrientation;
+    
+    //用来判断手势是否移动过
+    BOOL _hasMoved;
+    //判断是否已经判断出手势划的方向
+    BOOL _controlJudge;
+    //触摸开始触碰到的点
+    CGPoint _touchBeginPoint;
+    //记录触摸开始时的视频播放的时间
+    float _touchBeginValue;
+    //记录触摸开始亮度
+    float _touchBeginLightValue;
+    //记录触摸开始的音量
+    float _touchBeginVoiceValue;
 }
 
 @property (nonatomic, assign) HCDPlayerState state;
@@ -77,8 +100,13 @@ static NSString *const HCDVideoPlayerItemPresentationSizeKeyPath = @"presentatio
 @property (nonatomic, assign) BOOL           canFullScreen;
 @property (nonatomic, strong) UIActivityIndicatorView *actIndicator;  //加载视频时的旋转菊花
 
+@property (nonatomic, strong) MPVolumeView   *volumeView;             //音量控制控件
+@property (nonatomic, strong) UISlider       *volumeSlider;           //用这个来控制音量
+
 @property (nonatomic, strong) HcdLoaderURLConnection *resouerLoader;
 
+@property (nonatomic, assign) HCDPlayerControlType controlType;       //当前手势是在控制进度、声音还是亮度
+@property (nonatomic, strong) HcdTimeSheetView *timeSheetView;        //左右滑动时间View
 @end
 
 @implementation HcdCacheVideoPlayer
@@ -559,6 +587,30 @@ static NSString *const HCDVideoPlayerItemPresentationSizeKeyPath = @"presentatio
     return _actIndicator;
 }
 
+- (MPVolumeView *)volumeView {
+    if (!_volumeView) {
+        _volumeView = [[MPVolumeView alloc] init];
+        _volumeView.showsRouteButton = NO;
+        _volumeView.showsVolumeSlider = NO;
+        for (UIView * view in _volumeView.subviews) {
+            if ([NSStringFromClass(view.class) isEqualToString:@"MPVolumeSlider"]) {
+                self.volumeSlider = (UISlider *)view;
+                break;
+            }
+        }
+    }
+    return _volumeView;
+}
+
+- (HcdTimeSheetView *)timeSheetView {
+    if (!_timeSheetView) {
+        _timeSheetView = [[HcdTimeSheetView alloc]initWithFrame:CGRectMake(0, 0, 120, 60)];
+        _timeSheetView.hidden = YES;
+        _timeSheetView.layer.cornerRadius = 10.0;
+    }
+    return _timeSheetView;
+}
+
 #pragma mark - 设置进度条、暂停、全屏等组件
 
 - (void)setVideoToolView {
@@ -666,17 +718,36 @@ static NSString *const HCDVideoPlayerItemPresentationSizeKeyPath = @"presentatio
         make.bottom.equalTo(weakSelf.playerView).offset(-44);
     }];
     
+    [_showView addSubview:self.volumeView];
+    
+    [_showView addSubview:self.timeSheetView];
+    [self.timeSheetView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.center.equalTo(_showView);
+        make.width.equalTo(@(120));
+        make.height.equalTo(@60);
+    }];
+    
     UITapGestureRecognizer * tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapAction:)];
-//    tap.numberOfTapsRequired = 2;
-//    tap.numberOfTouchesRequired = 1;
+    tap.numberOfTapsRequired = 1;
+    tap.numberOfTouchesRequired = 1;
     tap.delegate = self;
     [self.touchView addGestureRecognizer:tap];
+    
+    UIPanGestureRecognizer *panRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePan:)];
+    [panRecognizer setMinimumNumberOfTouches:1];
+    [panRecognizer setMaximumNumberOfTouches:1];
+    [panRecognizer setDelegate:self];
+    [self.touchView addGestureRecognizer:panRecognizer];
 }
 
 #pragma mark - UIGestureRecognizerDelegate
 
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch{
-    return YES;
+    if (_controlJudge) {
+        return NO;
+    }else{
+        return YES;
+    }
 }
 
 - (void)tapAction:(UITapGestureRecognizer *)tap{
@@ -692,7 +763,126 @@ static NSString *const HCDVideoPlayerItemPresentationSizeKeyPath = @"presentatio
     }
 }
 
+- (void)handlePan:(UIPanGestureRecognizer *)recognizer {
+    // NSLog(@"gesture translatedPoint  xxoo xxoo");
+    
+    CGPoint touchPoint = [recognizer locationInView:self.touchView];
+    NSLog(@"(%f,%f)", touchPoint.x, touchPoint.y);
+    
+    if ([(UIPanGestureRecognizer *)recognizer state] == UIGestureRecognizerStateBegan) {
+        //触摸开始, 初始化一些值
+        _hasMoved = NO;
+        _controlJudge = NO;
+        _touchBeginValue = self.playSlider.value;
+        _touchBeginVoiceValue = _volumeSlider.value;
+        _touchBeginLightValue = [UIScreen mainScreen].brightness;
+        _touchBeginPoint = touchPoint;
+    }
+    
+    if ([(UIPanGestureRecognizer *)recognizer state] == UIGestureRecognizerStateChanged) {
 
+        //如果移动的距离过于小, 就判断为没有移动
+        if (fabs(touchPoint.x - _touchBeginPoint.x) < LeastMoveDistance && fabs(touchPoint.y - _touchBeginPoint.y) < LeastMoveDistance) {
+            return;
+        }
+        
+        _hasMoved = YES;
+        
+        //如果还没有判断出是什么手势就进行判断
+        if (!_controlJudge) {
+            //根据滑动角度的tan值来进行判断
+            float tan = fabs(touchPoint.y - _touchBeginPoint.y) / fabs(touchPoint.x - _touchBeginPoint.x);
+            
+            //当滑动角度小于30度的时候, 进度手势
+            if (tan < 1 / sqrt(3)) {
+                self.controlType = HCDPlayerControlTypeProgress;
+                _controlJudge = YES;
+            }
+            
+            //当滑动角度大于60度的时候, 声音和亮度
+            else if (tan > sqrt(3)) {
+                //判断是在屏幕的左半边还是右半边滑动, 左侧控制为亮度, 右侧控制音量
+                if (_touchBeginPoint.x < self.touchView.frame.size.width / 2) {
+                    _controlType = HCDPlayerControlTypeLight;
+                }else{
+                    _controlType = HCDPlayerControlTypeVoice;
+                }
+                _controlJudge = YES;
+            } else {
+                _controlType = HCDPlayerControlTypeNone;
+                return;
+            }
+        }
+        
+        if (HCDPlayerControlTypeProgress == _controlType) {
+            float value = [self moveProgressControllWithTempPoint:touchPoint];
+            [self timeValueChangingWithValue:value];
+        } else if (HCDPlayerControlTypeVoice == _controlType) {
+            //根据触摸开始时的音量和触摸开始时的点去计算出现在滑动到的音量
+            float voiceValue = _touchBeginVoiceValue - ((touchPoint.y - _touchBeginPoint.y) / CGRectGetHeight(self.touchView.frame));
+            //判断控制一下, 不能超出 0~1
+            if (voiceValue < 0) {
+                self.volumeSlider.value = 0;
+            }else if(voiceValue > 1){
+                self.volumeSlider.value = 1;
+            }else{
+                self.volumeSlider.value = voiceValue;
+            }
+        } else if (HCDPlayerControlTypeLight == _controlType) {
+            
+        } else if (HCDPlayerControlTypeNone == _controlType) {
+            if (self.toolView.hidden) {
+                [self toolViewOutHidden];
+            } else {
+                [self toolViewHidden];
+            }
+        }
+        
+    }
+    
+    if (([(UIPanGestureRecognizer *)recognizer state] == UIGestureRecognizerStateEnded) || ([(UIPanGestureRecognizer *)recognizer state] == UIGestureRecognizerStateCancelled)) {
+        CGFloat x = recognizer.view.center.x;
+        CGFloat y = recognizer.view.center.y;
+        
+        NSLog(@"%lf,%lf", x, y);
+        _controlJudge = NO;
+        //判断是否移动过,
+        if (_hasMoved) {
+            if (HCDPlayerControlTypeProgress == _controlType) {
+                float value = [self moveProgressControllWithTempPoint:touchPoint];
+                [self seekToTime:value];
+                self.timeSheetView.hidden = YES;
+            }
+        }
+    }
+}
+
+#pragma mark - 用来控制移动过程中计算手指划过的时间
+-(float)moveProgressControllWithTempPoint:(CGPoint)tempPoint{
+    float tempValue = _touchBeginValue + TotalScreenTime * ((tempPoint.x - _touchBeginPoint.x) / kScreenWidth);
+    if (tempValue > self.duration) {
+        tempValue = self.duration;
+    }else if (tempValue < 0){
+        tempValue = 0.0f;
+    }
+    return tempValue;
+}
+
+#pragma mark - 用来显示时间的view在时间发生变化时所作的操作
+-(void)timeValueChangingWithValue:(float)value{
+    if (value > _touchBeginValue) {
+        _timeSheetView.sheetStateImageView.image = [UIImage imageNamed:@"progress_icon_r"];
+    }else if(value < _touchBeginValue){
+        _timeSheetView.sheetStateImageView.image = [UIImage imageNamed:@"progress_icon_l"];
+    }
+    _timeSheetView.hidden = NO;
+    NSString * tempTime = [NSString calculateTimeWithTimeFormatter:value];
+    if (tempTime.length > 5) {
+        _timeSheetView.sheetTimeLabel.text = [NSString stringWithFormat:@"00:%@/%@", tempTime, self.totalTimeLbl.text];
+    }else{
+        _timeSheetView.sheetTimeLabel.text = [NSString stringWithFormat:@"%@/%@", tempTime, self.totalTimeLbl.text];
+    }
+}
 
 #pragma mark - 控制条隐藏
 

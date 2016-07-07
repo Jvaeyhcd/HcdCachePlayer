@@ -6,10 +6,10 @@
 //  Copyright © 2016年 Polesapp. All rights reserved.
 //
 
-#import "NSString+MD5.h"
+#import "NSString+HCD.h"
 #import <CommonCrypto/CommonCrypto.h>
 
-@implementation NSString (MD5)
+@implementation NSString (HCD)
 
 - (NSString *)stringToMD5
 {
@@ -41,6 +41,18 @@
      NSLog("%02X", 0x4); //04
      */
     return saveResult;
+}
+
++ (NSString *)calculateTimeWithTimeFormatter:(long long)timeSecond {
+    NSString * theLastTime = nil;
+    if (timeSecond < 60) {
+        theLastTime = [NSString stringWithFormat:@"00:%.2lld", timeSecond];
+    }else if(timeSecond >= 60 && timeSecond < 3600){
+        theLastTime = [NSString stringWithFormat:@"%.2lld:%.2lld", timeSecond/60, timeSecond%60];
+    }else if(timeSecond >= 3600){
+        theLastTime = [NSString stringWithFormat:@"%.2lld:%.2lld:%.2lld", timeSecond/3600, timeSecond%3600/60, timeSecond%60];
+    }
+    return theLastTime;
 }
 
 @end
