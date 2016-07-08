@@ -3,6 +3,8 @@ HcdCachePlayer
 
 带缓存的播放器，使用AVPlayer封装开发。
 
+![Demo](https://raw.githubusercontent.com/Jvaeyhcd/HcdCachePlayer/master/screen.gif)
+
 ### 简单介绍
 
 ![Demo](https://github.com/Jvaeyhcd/HcdDateTimePicker/blob/master/HCDDateTimePickerView/demo.gif)
