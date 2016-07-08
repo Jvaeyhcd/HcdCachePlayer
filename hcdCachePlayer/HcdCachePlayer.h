@@ -8,6 +8,8 @@
 
 // 图片路径
 #define HcdImageSrcName(file)               [@"hcdCachePlayer.bundle" stringByAppendingPathComponent:file]
+#define kScreenHeight ([UIScreen mainScreen].bounds.size.height)
+#define kScreenWidth ([UIScreen mainScreen].bounds.size.width)
 
 #import "HcdCacheVideoPlayer.h"
 #import "HcdLoaderURLConnection.h"
@@ -16,3 +18,4 @@
 #import "HcdPlayerView.h"
 #import "HcdTimeSheetView.h"
 #import "HcdAudioPlayer.h"
+#import "HcdLightView.h"

@@ -21,8 +21,6 @@
 #import "HcdCacheVideoPlayer.h"
 #import "HcdCachePlayer.h"
 
-#define kScreenHeight ([UIScreen mainScreen].bounds.size.height)
-#define kScreenWidth ([UIScreen mainScreen].bounds.size.width)
 #define LeastMoveDistance 15
 #define TotalScreenTime 90
 
@@ -148,6 +146,7 @@ typedef enum : NSUInteger {
             default:
                 break;
         }
+        [HcdLightView sharedInstance];
     }
     return self;
 }
@@ -862,7 +861,7 @@ typedef enum : NSUInteger {
                 self.volumeSlider.value = voiceValue;
             }
         } else if (HCDPlayerControlTypeLight == _controlType) {
-            
+            [UIScreen mainScreen].brightness -= ((touchPoint.y - _touchBeginPoint.y) / 10000);
         } else if (HCDPlayerControlTypeNone == _controlType) {
             if (self.toolView.hidden) {
                 [self toolViewOutHidden];
@@ -1206,6 +1205,9 @@ typedef enum : NSUInteger {
     if (orientation == UIInterfaceOrientationPortrait || orientation == UIInterfaceOrientationPortraitUpsideDown) {
         [self.showView removeFromSuperview];
         [self.playerSuperView addSubview:self.showView];
+        
+        HcdLightView *lightView = [HcdLightView sharedInstance];
+        [[UIApplication sharedApplication].keyWindow bringSubviewToFront:lightView];
         __weak HcdCacheVideoPlayer * weakSelf = self;
         [self.showView mas_remakeConstraints:^(MASConstraintMaker *make) {
             make.top.mas_equalTo(CGRectGetMinY(weakSelf.showViewRect));
@@ -1213,13 +1215,32 @@ typedef enum : NSUInteger {
             make.width.mas_equalTo(CGRectGetWidth(weakSelf.showViewRect));
             make.height.mas_equalTo(CGRectGetHeight(weakSelf.showViewRect));
         }];
+        
+        [lightView mas_remakeConstraints:^(MASConstraintMaker *make) {
+            make.centerX.equalTo([UIApplication sharedApplication].keyWindow);
+            make.centerY.equalTo([UIApplication sharedApplication].keyWindow).offset(-5);
+            make.width.mas_equalTo(155);
+            make.height.mas_equalTo(155);
+        }];
     } else if (orientation == UIInterfaceOrientationLandscapeLeft || orientation == UIInterfaceOrientationLandscapeRight) {
         [self.showView removeFromSuperview];
-        [[[UIApplication sharedApplication].delegate window] addSubview:self.showView];
+        [[UIApplication sharedApplication].keyWindow addSubview:self.showView];
+        
+        // 亮度view加到window最上层
+        HcdLightView *lightView = [HcdLightView sharedInstance];
+        [[UIApplication sharedApplication].keyWindow insertSubview:self.showView belowSubview:lightView];
+        
         [self.showView mas_remakeConstraints:^(MASConstraintMaker *make) {
             make.width.equalTo(@(kScreenHeight));
             make.height.equalTo(@(kScreenWidth));
             make.center.equalTo([[UIApplication sharedApplication].delegate window]);
+        }];
+        
+        [lightView mas_remakeConstraints:^(MASConstraintMaker *make) {
+            make.centerX.equalTo([UIApplication sharedApplication].keyWindow);
+            make.centerY.equalTo([UIApplication sharedApplication].keyWindow);
+            make.width.mas_equalTo(155);
+            make.height.mas_equalTo(155);
         }];
     }
     
@@ -1234,6 +1255,7 @@ typedef enum : NSUInteger {
         [[UIApplication sharedApplication] setStatusBarOrientation:_currentOrientation animated:YES];
         //旋转视频播放的view和显示亮度的view
         self.showView.transform = [self getOrientation:orientation];
+        [HcdLightView sharedInstance].transform = [self getOrientation:orientation];
     } completion:^(BOOL finished) {
         
     }];

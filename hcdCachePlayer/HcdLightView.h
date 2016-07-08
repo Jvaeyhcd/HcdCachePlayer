@@ -10,4 +10,6 @@
 
 @interface HcdLightView : UIView
 
++ (instancetype)sharedInstance;
+
 @end
