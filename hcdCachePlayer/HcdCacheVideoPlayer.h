@@ -85,4 +85,16 @@ typedef NS_ENUM(NSInteger, HCDPlayerState) {
  */
 - (void)halfScreen;
 
+/**
+ *  清除所有本地缓存视频文件
+ */
++ (void)clearAllVideoCache;
+
+/**
+ *  计算所有视频缓存大小
+ *
+ *  @return 视频缓存大小
+ */
++ (double)allVideoCacheSize;
+
 @end

@@ -31,7 +31,9 @@
     UIView *videoView = [[UIView alloc]initWithFrame:CGRectMake(0, 64, [UIScreen mainScreen].bounds.size.width, [UIScreen mainScreen].bounds.size.width * 0.5625)];
     [self.view addSubview:videoView];
     
-    [play playWithUrl:[NSURL URLWithString:@"http://7xsnx0.com2.z0.glb.qiniucdn.com/14651947751451.mp4"] showView:videoView andSuperView:self.view];
+    [play playWithUrl:[NSURL URLWithString:@"http://baobab.wdjcdn.com/14564977406580.mp4"] showView:videoView andSuperView:self.view];
+    
+    NSLog(@"%f", [HcdCacheVideoPlayer allVideoCacheSize]);
     
     [self.view addSubview:playSoundBtn];
 }
@@ -44,6 +46,11 @@
 #pragma mark - 关闭设备自动旋转, 然后手动监测设备旋转方向来旋转avplayerView
 -(BOOL)shouldAutorotate{
     return NO;
+}
+
+- (UIInterfaceOrientationMask)supportedInterfaceOrientations{
+
+    return UIInterfaceOrientationMaskPortrait;
 }
 
 - (void)didReceiveMemoryWarning {

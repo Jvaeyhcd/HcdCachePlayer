@@ -228,7 +228,7 @@ typedef enum : NSUInteger {
     
     [self setVideoToolView];
     
-    [self updateOrientation];
+//    [self updateOrientation];
 }
 
 
@@ -263,6 +263,42 @@ typedef enum : NSUInteger {
 
 - (void)halfScreen {
     
+}
+
++ (void)clearAllVideoCache {
+    NSFileManager *fileManager=[NSFileManager defaultManager];
+    //这里自己写需要保存数据的路径
+    NSString *cachPath = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).lastObject;
+    NSArray *childFiles = [fileManager subpathsAtPath:cachPath];
+    for (NSString *fileName in childFiles) {
+        //如有需要，加入条件，过滤掉不想删除的文件
+        NSLog(@"%@", fileName);
+        if ([fileName.pathExtension isEqualToString:@"mp4"]) {
+            NSString *absolutePath=[cachPath stringByAppendingPathComponent:fileName];
+            [fileManager removeItemAtPath:absolutePath error:nil];
+        }
+    }
+}
+
++ (double)allVideoCacheSize {
+    
+    double cacheVideoSize = 0.0f;
+    
+    NSFileManager *fileManager=[NSFileManager defaultManager];
+    //这里自己写需要保存数据的路径
+    NSString *cachPath = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).lastObject;
+    NSArray *childFiles = [fileManager subpathsAtPath:cachPath];
+    for (NSString *fileName in childFiles) {
+        //如有需要，加入条件，过滤掉不想删除的文件
+        NSLog(@"%@", fileName);
+        if ([fileName.pathExtension isEqualToString:@"mp4"]) {
+            NSString *path = [cachPath stringByAppendingPathComponent: fileName];
+            NSDictionary *fileAttributes = [fileManager attributesOfItemAtPath: path error: nil ];
+            cacheVideoSize += ((double)([fileAttributes fileSize ]) / 1024.0 / 1024.0);
+        }
+    }
+    
+    return cacheVideoSize;
 }
 
 - (void)seekToTime:(CGFloat)seconds {
@@ -594,6 +630,7 @@ typedef enum : NSUInteger {
                 break;
             }
         }
+        NSLog(@"%f %f", _volumeView.frame.size.width, _volumeView.frame.size.height);
     }
     return _volumeView;
 }
@@ -938,6 +975,11 @@ typedef enum : NSUInteger {
     _playSlider.maximumValue = (NSInteger)time;
 }
 
+/**
+ *  更新当前播放时间
+ *
+ *  @param time 但前播放时间秒数
+ */
 - (void)updateCurrentTime:(CGFloat)time
 {
     long videocurrent = ceil(time);
@@ -952,6 +994,11 @@ typedef enum : NSUInteger {
     self.currentTimeLbl.text = str;
 }
 
+/**
+ *  更新所有时间
+ *
+ *  @param time 时间（秒）
+ */
 - (void)updateTotolTime:(CGFloat)time
 {
     long videoLenth = ceil(time);
@@ -965,11 +1012,18 @@ typedef enum : NSUInteger {
     self.totalTimeLbl.text = strtotol;
 }
 
-
+/**
+ *  更新Slider
+ *
+ *  @param currentSecond 但前播放时间进度
+ */
 - (void)updateVideoSlider:(CGFloat)currentSecond {
     [self.playSlider setValue:currentSecond animated:YES];
 }
 
+/**
+ *  暂停或者播放
+ */
 - (void)resumeOrPause
 {
     if (!self.currentPlayerItem) {
@@ -994,6 +1048,9 @@ typedef enum : NSUInteger {
     self.isPauseByUser = YES;
 }
 
+/**
+ *  重新播放
+ */
 - (void)resume
 {
     if (!self.currentPlayerItem) {
@@ -1006,6 +1063,9 @@ typedef enum : NSUInteger {
     [self.player play];
 }
 
+/**
+ *  暂停播放
+ */
 - (void)pause
 {
     if (!self.currentPlayerItem) {
@@ -1018,6 +1078,9 @@ typedef enum : NSUInteger {
     [self.player pause];
 }
 
+/**
+ *  停止播放
+ */
 - (void)stop
 {
     self.isPauseByUser = YES;
@@ -1030,6 +1093,11 @@ typedef enum : NSUInteger {
     [[NSNotificationCenter defaultCenter] postNotificationName:kHCDPlayerProgressChangedNotification object:nil];
 }
 
+/**
+ *  计算播放进度
+ *
+ *  @return 播放时间进度
+ */
 - (CGFloat)progress
 {
     if (self.duration > 0) {
