@@ -57,4 +57,4 @@ NSURL *url = [NSURL URLWithString:@""];//您要播放的url地址
 如果您觉得对您有所帮助您可以star一下，如果您在使用过程中发现什么bug欢迎Issues我。
 
 第一次使用Cocoapods制作，所以写了一片文章做了个笔记：
-
+[《CocoaPods的制作过程》](http://www.jvaeyhcd.cc/2016/07/08/CocoaPods%E7%9A%84%E5%88%B6%E4%BD%9C%E8%BF%87%E7%A8%8B/)
