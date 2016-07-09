@@ -56,5 +56,5 @@ NSURL *url = [NSURL URLWithString:@""];//您要播放的url地址
 使用AVPlayer封装带缓存的音乐播放器。
 如果您觉得对您有所帮助您可以star一下，如果您在使用过程中发现什么bug欢迎Issues我。
 
-第一次使用Cocoapods制作，所有写了一片文章做了个笔记：
+第一次使用Cocoapods制作，所以写了一片文章做了个笔记：
 
