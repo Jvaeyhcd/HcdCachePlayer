@@ -823,15 +823,12 @@ typedef enum : NSUInteger {
         NSLog(@"点击了playSlider");
         CGPoint touchPoint = [tap locationInView:self.playSlider];
         NSLog(@"(%f,%f)", touchPoint.x, touchPoint.y);
-        NSLog(@"%f", self.playSlider.frame.size.width);
+        NSLog(@"%f duration:%f", self.playSlider.frame.size.width, self.duration);
         
-        float value = (touchPoint.x / self.playSlider.frame.size.width) * self.duration;
+        float value = (touchPoint.x / self.playSlider.frame.size.width) * self.playSlider.maximumValue;
         
-        value = MAX(0, value);
-        value = MIN(value, self.duration);
-        
-        [self.playSlider setValue:value];
         [self seekToTime:value];
+        [self updateCurrentTime:value];
     }
 }
 
