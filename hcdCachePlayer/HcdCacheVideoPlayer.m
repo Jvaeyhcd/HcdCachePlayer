@@ -90,6 +90,7 @@ typedef enum : NSUInteger {
 @property (nonatomic, strong) UISlider       *playSlider;             //滑竿
 @property (nonatomic, strong) UIButton       *stopButton;             //播放暂停按钮
 @property (nonatomic, strong) UIButton       *screenButton;           //全屏按钮
+@property (nonatomic, strong) UIButton       *repeatBtn;              //重播按钮
 @property (nonatomic, assign) BOOL           isFullScreen;
 @property (nonatomic, assign) BOOL           canFullScreen;
 @property (nonatomic, strong) UIActivityIndicatorView *actIndicator;  //加载视频时的旋转菊花
@@ -344,10 +345,11 @@ typedef enum : NSUInteger {
 {
 //    [self stop];
     //重新播放
-    
+    self.repeatBtn.hidden = NO;
+    [self toolViewHidden];
     self.state = HCDPlayerStateFinish;
-    [_stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_play")] forState:UIControlStateNormal];
-    [_stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_play_hl")] forState:UIControlStateHighlighted];
+    [self.stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_play")] forState:UIControlStateNormal];
+    [self.stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_play_hl")] forState:UIControlStateHighlighted];
 }
 
 //在监听播放器状态中处理比较准确
@@ -565,9 +567,9 @@ typedef enum : NSUInteger {
 - (UIProgressView *)videoProgressView {
     
     if (!_videoProgressView) {
-        _videoProgressView = [[UIProgressView alloc]init];
-        _videoProgressView.progressTintColor = [UIColor whiteColor];  //填充部分颜色
-        _videoProgressView.trackTintColor = [UIColor colorWithWhite:1.0 alpha:0.18];   // 未填充部分颜色
+        _videoProgressView = [[UIProgressView alloc] initWithProgressViewStyle:UIProgressViewStyleDefault];
+        _videoProgressView.progressTintColor = [UIColor colorWithRed:1 green:1 blue:1 alpha:0.5];  //填充部分颜色
+        _videoProgressView.trackTintColor = [UIColor clearColor];   // 未填充部分颜色
         _videoProgressView.layer.cornerRadius = 1.5;
         _videoProgressView.layer.masksToBounds = YES;
         CGAffineTransform transform = CGAffineTransformMakeScale(1.0, 1.5);
@@ -580,8 +582,8 @@ typedef enum : NSUInteger {
     if (!_playSlider) {
         _playSlider = [[UISlider alloc] init];
         [_playSlider setThumbImage:[UIImage imageNamed:HcdImageSrcName(@"icon_progress")] forState:UIControlStateNormal];
-        _playSlider.minimumTrackTintColor = [UIColor clearColor];
-        _playSlider.maximumTrackTintColor = [UIColor clearColor];
+        _playSlider.minimumTrackTintColor = [UIColor whiteColor];
+        _playSlider.maximumTrackTintColor = [UIColor colorWithRed:0.5 green:0.5 blue:0.5 alpha:0.5];
         [_playSlider addTarget:self action:@selector(playSliderChange:) forControlEvents:UIControlEventValueChanged]; //拖动滑竿更新时间
         [_playSlider addTarget:self action:@selector(playSliderChangeEnd:) forControlEvents:UIControlEventTouchUpInside];  //松手,滑块拖动停止
         [_playSlider addTarget:self action:@selector(playSliderChangeEnd:) forControlEvents:UIControlEventTouchUpOutside];
@@ -609,6 +611,16 @@ typedef enum : NSUInteger {
         [_screenButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_full")] forState:UIControlStateHighlighted];
     }
     return _screenButton;
+}
+
+- (UIButton *)repeatBtn {
+    if (!_repeatBtn) {
+        _repeatBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+        [_repeatBtn setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_repeat_video")] forState:UIControlStateNormal];
+        [_repeatBtn addTarget:self action:@selector(repeatPlay) forControlEvents:UIControlEventTouchUpInside];
+        _repeatBtn.hidden = YES;
+    }
+    return _repeatBtn;
 }
 
 - (UIActivityIndicatorView *)actIndicator {
@@ -759,6 +771,11 @@ typedef enum : NSUInteger {
         make.height.equalTo(@60);
     }];
     
+    [_showView addSubview:self.repeatBtn];
+    [self.repeatBtn mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.center.equalTo(_showView);
+    }];
+    
     UITapGestureRecognizer * tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapAction:)];
     tap.numberOfTapsRequired = 1;
     tap.numberOfTouchesRequired = 1;
@@ -770,6 +787,12 @@ typedef enum : NSUInteger {
     [panRecognizer setMaximumNumberOfTouches:1];
     [panRecognizer setDelegate:self];
     [self.touchView addGestureRecognizer:panRecognizer];
+    
+    UITapGestureRecognizer *sliderTap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(sliderTapAction:)];
+    sliderTap.numberOfTapsRequired = 1;
+    sliderTap.numberOfTouchesRequired = 1;
+    sliderTap.delegate = self;
+    [self.playSlider addGestureRecognizer:sliderTap];
 }
 
 #pragma mark - UIGestureRecognizerDelegate
@@ -792,6 +815,23 @@ typedef enum : NSUInteger {
         }
     } else if(tap.numberOfTapsRequired == 2){
         [self resumeOrPause];
+    }
+}
+
+- (void)sliderTapAction:(UITapGestureRecognizer *)tap {
+    if (tap.numberOfTapsRequired == 1) {
+        NSLog(@"点击了playSlider");
+        CGPoint touchPoint = [tap locationInView:self.playSlider];
+        NSLog(@"(%f,%f)", touchPoint.x, touchPoint.y);
+        NSLog(@"%f", self.playSlider.frame.size.width);
+        
+        float value = (touchPoint.x / self.playSlider.frame.size.width) * self.duration;
+        
+        value = MAX(0, value);
+        value = MIN(value, self.duration);
+        
+        [self.playSlider setValue:value];
+        [self seekToTime:value];
     }
 }
 
@@ -931,6 +971,10 @@ typedef enum : NSUInteger {
 #pragma mark - 控制条退出隐藏
 
 - (void)toolViewOutHidden {
+    
+    if (!self.repeatBtn.hidden) {
+        return;
+    }
     self.toolView.hidden = NO;
     
     if (_isFullScreen) {
@@ -957,8 +1001,8 @@ typedef enum : NSUInteger {
 {
     [self seekToTime:slider.value];
     [self updateCurrentTime:slider.value];
-    [_stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_pause")] forState:UIControlStateNormal];
-    [_stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_pause_hl")] forState:UIControlStateHighlighted];
+    [self.stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_pause")] forState:UIControlStateNormal];
+    [self.stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_pause_hl")] forState:UIControlStateHighlighted];
 }
 
 //手指正在拖动，播放器继续播放，但是停止滑竿的时间走动
@@ -970,8 +1014,8 @@ typedef enum : NSUInteger {
 #pragma mark - 控件拖动
 - (void)setPlaySliderValue:(CGFloat)time
 {
-    _playSlider.minimumValue = 0.0;
-    _playSlider.maximumValue = (NSInteger)time;
+    self.playSlider.minimumValue = 0.0;
+    self.playSlider.maximumValue = (NSInteger)time;
 }
 
 /**
@@ -1029,22 +1073,32 @@ typedef enum : NSUInteger {
         return;
     }
     if (self.state == HCDPlayerStatePlaying) {
-        [_stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_play")] forState:UIControlStateNormal];
-        [_stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_play_hl")] forState:UIControlStateHighlighted];
+        [self.stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_play")] forState:UIControlStateNormal];
+        [self.stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_play_hl")] forState:UIControlStateHighlighted];
         [self.player pause];
         self.state = HCDPlayerStatePause;
     } else if (self.state == HCDPlayerStatePause) {
-        [_stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_pause")] forState:UIControlStateNormal];
-        [_stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_pause_hl")] forState:UIControlStateHighlighted];
+        self.repeatBtn.hidden = YES;
+        [self.stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_pause")] forState:UIControlStateNormal];
+        [self.stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_pause_hl")] forState:UIControlStateHighlighted];
         [self.player play];
         self.state = HCDPlayerStatePlaying;
     } else if (self.state == HCDPlayerStateFinish) {
-        [_stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_pause")] forState:UIControlStateNormal];
-        [_stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_pause_hl")] forState:UIControlStateHighlighted];
+        self.repeatBtn.hidden = YES;
+        [self.stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_pause")] forState:UIControlStateNormal];
+        [self.stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_pause_hl")] forState:UIControlStateHighlighted];
         [self seekToTime:0.0];
         self.state = HCDPlayerStatePlaying;
     }
     self.isPauseByUser = YES;
+}
+
+/**
+ *  重播
+ */
+- (void)repeatPlay {
+    [self toolViewOutHidden];
+    [self resumeOrPause];
 }
 
 /**
@@ -1056,8 +1110,8 @@ typedef enum : NSUInteger {
         return;
     }
     
-    [_stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_pause")] forState:UIControlStateNormal];
-    [_stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_pause_hl")] forState:UIControlStateHighlighted];
+    [self.stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_pause")] forState:UIControlStateNormal];
+    [self.stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_pause_hl")] forState:UIControlStateHighlighted];
     self.isPauseByUser = NO;
     [self.player play];
 }
@@ -1070,8 +1124,8 @@ typedef enum : NSUInteger {
     if (!self.currentPlayerItem) {
         return;
     }
-    [_stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_play")] forState:UIControlStateNormal];
-    [_stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_play_hl")] forState:UIControlStateHighlighted];
+    [self.stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_play")] forState:UIControlStateNormal];
+    [self.stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_play_hl")] forState:UIControlStateHighlighted];
     self.isPauseByUser = YES;
     self.state = HCDPlayerStatePause;
     [self.player pause];
