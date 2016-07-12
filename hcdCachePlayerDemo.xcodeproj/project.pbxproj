@@ -9,11 +9,18 @@
 /* Begin PBXBuildFile section */
 		0C168D4C1D2666A40008F58A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 0C168D4B1D2666A40008F58A /* main.m */; };
 		0C168D4F1D2666A50008F58A /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 0C168D4E1D2666A50008F58A /* AppDelegate.m */; };
-		0C168D521D2666A50008F58A /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0C168D511D2666A50008F58A /* ViewController.m */; };
+		0C168D521D2666A50008F58A /* VideoDetailController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0C168D511D2666A50008F58A /* VideoDetailController.m */; };
 		0C168D571D2666A50008F58A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0C168D561D2666A50008F58A /* Assets.xcassets */; };
 		0C168D5A1D2666A50008F58A /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0C168D581D2666A50008F58A /* LaunchScreen.storyboard */; };
 		0C168D671D266D010008F58A /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0C168D661D266D010008F58A /* AVFoundation.framework */; };
 		0C168D691D266E930008F58A /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0C168D681D266E930008F58A /* Foundation.framework */; };
+		0C36D5101D34EBA70024F605 /* tabbar_discover_highlighted@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 0C36D50C1D34EBA70024F605 /* tabbar_discover_highlighted@2x.png */; };
+		0C36D5111D34EBA70024F605 /* tabbar_discover_highlighted@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 0C36D50D1D34EBA70024F605 /* tabbar_discover_highlighted@3x.png */; };
+		0C36D5121D34EBA70024F605 /* tabbar_home_highlighted@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 0C36D50E1D34EBA70024F605 /* tabbar_home_highlighted@2x.png */; };
+		0C36D5131D34EBA70024F605 /* tabbar_home_highlighted@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 0C36D50F1D34EBA70024F605 /* tabbar_home_highlighted@3x.png */; };
+		0C36D5191D34ECC60024F605 /* VideoTitleListViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0C36D5181D34ECC60024F605 /* VideoTitleListViewController.m */; };
+		0C36D51C1D34ECEE0024F605 /* MainViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0C36D51B1D34ECEE0024F605 /* MainViewController.m */; };
+		0C36D51F1D34ED030024F605 /* VideoListViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0C36D51E1D34ED030024F605 /* VideoListViewController.m */; };
 		0CD99F881D2A45840069E8B0 /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0CD99F871D2A45840069E8B0 /* MobileCoreServices.framework */; };
 		0CD9C3BE1D2F7BD7009FEB59 /* HcdLightView.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CD9C3BD1D2F7BD7009FEB59 /* HcdLightView.m */; };
 		0CDE04B71D2E3861009E87ED /* HcdAudioPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CDE04AA1D2E3861009E87ED /* HcdAudioPlayer.m */; };
@@ -32,13 +39,23 @@
 		0C168D4B1D2666A40008F58A /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		0C168D4D1D2666A50008F58A /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		0C168D4E1D2666A50008F58A /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
-		0C168D501D2666A50008F58A /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
-		0C168D511D2666A50008F58A /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
+		0C168D501D2666A50008F58A /* VideoDetailController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VideoDetailController.h; sourceTree = "<group>"; };
+		0C168D511D2666A50008F58A /* VideoDetailController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = VideoDetailController.m; sourceTree = "<group>"; };
 		0C168D561D2666A50008F58A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		0C168D591D2666A50008F58A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		0C168D5B1D2666A50008F58A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		0C168D661D266D010008F58A /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		0C168D681D266E930008F58A /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		0C36D50C1D34EBA70024F605 /* tabbar_discover_highlighted@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "tabbar_discover_highlighted@2x.png"; sourceTree = "<group>"; };
+		0C36D50D1D34EBA70024F605 /* tabbar_discover_highlighted@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "tabbar_discover_highlighted@3x.png"; sourceTree = "<group>"; };
+		0C36D50E1D34EBA70024F605 /* tabbar_home_highlighted@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "tabbar_home_highlighted@2x.png"; sourceTree = "<group>"; };
+		0C36D50F1D34EBA70024F605 /* tabbar_home_highlighted@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "tabbar_home_highlighted@3x.png"; sourceTree = "<group>"; };
+		0C36D5171D34ECC60024F605 /* VideoTitleListViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VideoTitleListViewController.h; sourceTree = "<group>"; };
+		0C36D5181D34ECC60024F605 /* VideoTitleListViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VideoTitleListViewController.m; sourceTree = "<group>"; };
+		0C36D51A1D34ECEE0024F605 /* MainViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MainViewController.h; sourceTree = "<group>"; };
+		0C36D51B1D34ECEE0024F605 /* MainViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MainViewController.m; sourceTree = "<group>"; };
+		0C36D51D1D34ED030024F605 /* VideoListViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VideoListViewController.h; sourceTree = "<group>"; };
+		0C36D51E1D34ED030024F605 /* VideoListViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VideoListViewController.m; sourceTree = "<group>"; };
 		0CD99F871D2A45840069E8B0 /* MobileCoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MobileCoreServices.framework; path = System/Library/Frameworks/MobileCoreServices.framework; sourceTree = SDKROOT; };
 		0CD9C3BC1D2F7BD7009FEB59 /* HcdLightView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HcdLightView.h; sourceTree = "<group>"; };
 		0CD9C3BD1D2F7BD7009FEB59 /* HcdLightView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HcdLightView.m; sourceTree = "<group>"; };
@@ -102,8 +119,15 @@
 				0CDE04A81D2E3861009E87ED /* hcdCachePlayer */,
 				0C168D4D1D2666A50008F58A /* AppDelegate.h */,
 				0C168D4E1D2666A50008F58A /* AppDelegate.m */,
-				0C168D501D2666A50008F58A /* ViewController.h */,
-				0C168D511D2666A50008F58A /* ViewController.m */,
+				0C168D501D2666A50008F58A /* VideoDetailController.h */,
+				0C168D511D2666A50008F58A /* VideoDetailController.m */,
+				0C36D5171D34ECC60024F605 /* VideoTitleListViewController.h */,
+				0C36D5181D34ECC60024F605 /* VideoTitleListViewController.m */,
+				0C36D51A1D34ECEE0024F605 /* MainViewController.h */,
+				0C36D51B1D34ECEE0024F605 /* MainViewController.m */,
+				0C36D51D1D34ED030024F605 /* VideoListViewController.h */,
+				0C36D51E1D34ED030024F605 /* VideoListViewController.m */,
+				0C36D50B1D34EB600024F605 /* resource */,
 				0C168D561D2666A50008F58A /* Assets.xcassets */,
 				0C168D581D2666A50008F58A /* LaunchScreen.storyboard */,
 				0C168D5B1D2666A50008F58A /* Info.plist */,
@@ -118,6 +142,17 @@
 				0C168D4B1D2666A40008F58A /* main.m */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		0C36D50B1D34EB600024F605 /* resource */ = {
+			isa = PBXGroup;
+			children = (
+				0C36D50C1D34EBA70024F605 /* tabbar_discover_highlighted@2x.png */,
+				0C36D50D1D34EBA70024F605 /* tabbar_discover_highlighted@3x.png */,
+				0C36D50E1D34EBA70024F605 /* tabbar_home_highlighted@2x.png */,
+				0C36D50F1D34EBA70024F605 /* tabbar_home_highlighted@3x.png */,
+			);
+			path = resource;
 			sourceTree = "<group>";
 		};
 		0CDE04A81D2E3861009E87ED /* hcdCachePlayer */ = {
@@ -226,6 +261,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				0C168D5A1D2666A50008F58A /* LaunchScreen.storyboard in Resources */,
+				0C36D5131D34EBA70024F605 /* tabbar_home_highlighted@3x.png in Resources */,
+				0C36D5121D34EBA70024F605 /* tabbar_home_highlighted@2x.png in Resources */,
+				0C36D5101D34EBA70024F605 /* tabbar_discover_highlighted@2x.png in Resources */,
+				0C36D5111D34EBA70024F605 /* tabbar_discover_highlighted@3x.png in Resources */,
 				0CDE04BF1D2E3A6D009E87ED /* hcdCachePlayer.bundle in Resources */,
 				0C168D571D2666A50008F58A /* Assets.xcassets in Resources */,
 			);
@@ -286,14 +325,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0C168D521D2666A50008F58A /* ViewController.m in Sources */,
+				0C168D521D2666A50008F58A /* VideoDetailController.m in Sources */,
 				0CDE04BC1D2E3861009E87ED /* HcdVideoRequestTask.m in Sources */,
 				0CDE04B71D2E3861009E87ED /* HcdAudioPlayer.m in Sources */,
 				0CDE04BD1D2E3861009E87ED /* NSString+HCD.m in Sources */,
+				0C36D51C1D34ECEE0024F605 /* MainViewController.m in Sources */,
 				0CDE04B81D2E3861009E87ED /* HcdCacheVideoPlayer.m in Sources */,
+				0C36D5191D34ECC60024F605 /* VideoTitleListViewController.m in Sources */,
 				0C168D4F1D2666A50008F58A /* AppDelegate.m in Sources */,
 				0CDE04BB1D2E3861009E87ED /* HcdTimeSheetView.m in Sources */,
 				0CDE04BA1D2E3861009E87ED /* HcdPlayerView.m in Sources */,
+				0C36D51F1D34ED030024F605 /* VideoListViewController.m in Sources */,
 				0CD9C3BE1D2F7BD7009FEB59 /* HcdLightView.m in Sources */,
 				0CDE04B91D2E3861009E87ED /* HcdLoaderURLConnection.m in Sources */,
 				0C168D4C1D2666A40008F58A /* main.m in Sources */,

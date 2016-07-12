@@ -1169,7 +1169,9 @@ typedef enum : NSUInteger {
     [self.currentPlayerItem removeObserver:self forKeyPath:HCDVideoPlayerItemLoadedTimeRangesKeyPath];
     [self.currentPlayerItem removeObserver:self forKeyPath:HCDVideoPlayerItemPlaybackBufferEmptyKeyPath];
     [self.currentPlayerItem removeObserver:self forKeyPath:HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath];
+    [self.currentPlayerItem removeObserver:self forKeyPath:HCDVideoPlayerItemPresentationSizeKeyPath];
     [self.player removeTimeObserver:self.playbackTimeObserver];
+    self.player = nil;
     self.playbackTimeObserver = nil;
     self.currentPlayerItem = nil;
 }

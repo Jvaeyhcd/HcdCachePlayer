@@ -7,7 +7,7 @@
 //
 
 #import "AppDelegate.h"
-#import "ViewController.h"
+#import "MainViewController.h"
 
 @interface AppDelegate ()
 
@@ -21,11 +21,13 @@
     
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     
-    UINavigationController *navController = [[UINavigationController alloc]initWithRootViewController:[[ViewController alloc] init]];
+//    UINavigationController *navController = [[UINavigationController alloc]initWithRootViewController:[[ViewController alloc] init]];
+    
+    MainViewController *mainVC = [[MainViewController alloc]init];
     
     [[UINavigationBar appearance] setTintColor:[UIColor cyanColor]];
     
-    [self.window setRootViewController:navController];
+    [self.window setRootViewController:mainVC];
     self.window.backgroundColor = [UIColor whiteColor];
     [self.window makeKeyAndVisible];
     
@@ -54,21 +56,4 @@
     // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
 }
 
-@end
-
-@implementation UINavigationController (Rotation)
-
-- (BOOL)shouldAutorotate
-{
-    return [[self.viewControllers lastObject] shouldAutorotate];
-}
-
-- (NSUInteger)supportedInterfaceOrientations
-{
-    return [[self.viewControllers lastObject] supportedInterfaceOrientations];
-}
-
-- (UIInterfaceOrientation)preferredInterfaceOrientationForPresentation {
-    return [[self.viewControllers lastObject] preferredInterfaceOrientationForPresentation];
-}
 @end
