@@ -5,7 +5,7 @@ HcdCachePlayer
 [![Platform](https://img.shields.io/cocoapods/p/HcdCachePlayer.svg)](http://cocoapods.org/pods/HcdCachePlayer)
 [![Platform](https://img.shields.io/github/tag/Jvaeyhcd/HcdCachePlayer.svg
 )](http://cocoapods.org/pods/HcdCachePlayer)
-[![](https://img.shields.io/badge/%E4%BD%9C%E8%80%85-%E9%BB%84%E6%88%90%E8%BE%BE-f07c3d.svg)](http://www.jvaeyhcd.cc)
+[![Author](https://img.shields.io/badge/author-Jvaeyhcd-f07c3d.svg)](http://www.jvaeyhcd.cc)
 [![GitHub stars](https://img.shields.io/github/stars/Jvaeyhcd/HcdCachePlayer.svg?style=social&label=Star&maxAge=2592000)]()
 
 HcdCacheVideoPlayer实现了边下边播在线视频，并且能将在线视频缓存在本地，支持左右滑动手势来调整视频播放进度，上下滑动手势调节音量大小，并且支持全屏播放。此控件使用了[Masonry](https://github.com/SnapKit/Masonry)自动布局来实现全屏播放时的界面布局。
