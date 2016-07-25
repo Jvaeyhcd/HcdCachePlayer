@@ -10,6 +10,9 @@
 #import "HcdCachePlayer.h"
 
 @interface VideoDetailController ()
+{
+    HcdCacheVideoPlayer *_play;
+}
 
 @end
 
@@ -21,11 +24,11 @@
     // Do any additional setup after loading the view, typically from a nib.
     
     
-    HcdCacheVideoPlayer *play = [HcdCacheVideoPlayer sharedInstance];
+    _play = [[HcdCacheVideoPlayer alloc]init];
     UIView *videoView = [[UIView alloc]initWithFrame:CGRectMake(0, 64, [UIScreen mainScreen].bounds.size.width, [UIScreen mainScreen].bounds.size.width * 0.5625)];
     [self.view addSubview:videoView];
     
-    [play playWithUrl:[NSURL URLWithString:self.videoUrlStr]
+    [_play playWithUrl:[NSURL URLWithString:self.videoUrlStr]
              showView:videoView
          andSuperView:self.view
             withCache:YES];
@@ -40,7 +43,7 @@
 
 - (void)viewDidDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
-    [[HcdCacheVideoPlayer sharedInstance] stop];
+    [_play stop];
 }
 
 - (void)didReceiveMemoryWarning {
