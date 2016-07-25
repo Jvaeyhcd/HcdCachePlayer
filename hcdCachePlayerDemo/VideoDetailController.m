@@ -25,7 +25,10 @@
     UIView *videoView = [[UIView alloc]initWithFrame:CGRectMake(0, 64, [UIScreen mainScreen].bounds.size.width, [UIScreen mainScreen].bounds.size.width * 0.5625)];
     [self.view addSubview:videoView];
     
-    [play playWithUrl:[NSURL URLWithString:self.videoUrlStr] showView:videoView andSuperView:self.view];
+    [play playWithUrl:[NSURL URLWithString:self.videoUrlStr]
+             showView:videoView
+         andSuperView:self.view
+            withCache:YES];
     
     NSLog(@"%f", [HcdCacheVideoPlayer allVideoCacheSize]);
     

@@ -48,10 +48,14 @@ typedef NS_ENUM(NSInteger, HCDPlayerState) {
 /**
  *  播放服务器的视频，先判断本地是否有缓存文件，缓存文件名为连接的url经过md5加密后生成的字符串
  *
- *  @param url      视频地址
- *  @param showView 显示的View
+ *  @param url       视频地址
+ *  @param showView  显示的View
+ *  @param withCache 是否播放缓存的文件
  */
-- (void)playWithUrl:(NSURL *)url showView:(UIView *)showView andSuperView:(UIView *)superView;
+- (void)playWithUrl:(NSURL *)url
+           showView:(UIView *)showView
+       andSuperView:(UIView *)superView
+          withCache:(BOOL)withCache;
 
 /**
  *  指定到某一事件点开始播放

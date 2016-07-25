@@ -156,25 +156,31 @@
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection
 {
     
+    NSLog(@"connectionDidFinishLoading: %@", self.taskArr);
+    
     if (self.taskArr.count < 2) {
         _isFinishLoad = YES;
         
         //使用md5将请求url地址加密后作为缓存本地文件的文件名
         NSString *md5File = [NSString stringWithFormat:@"%@.mp4", [[_url absoluteString] stringToMD5]];
         
+        NSLog(@"saveFileName:%@", md5File);
+        
         //这里自己写需要保存数据的路径
         NSString *document = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).lastObject;
         NSString *movePath =  [document stringByAppendingPathComponent:md5File];
         
         if (![[NSFileManager defaultManager] fileExistsAtPath:movePath]) {
-            BOOL isSuccess = [[NSFileManager defaultManager] copyItemAtPath:_tempPath toPath:movePath error:nil];
-            if (isSuccess) {
-                [self clearData];
-                NSLog(@"rename success");
-            }else{
-                NSLog(@"rename fail");
+            
+            [self movePath:_tempPath toPath:movePath];
+            
+        } else {
+            BOOL removeSuccess = [[NSFileManager defaultManager] removeItemAtPath:movePath error:nil];
+            if (removeSuccess) {
+                [self movePath:_tempPath toPath:movePath];
+            } else {
+                NSLog(@"cache failed");
             }
-            NSLog(@"----movePath----:%@", movePath);
         }
     }
     
@@ -182,6 +188,17 @@
         [self.delegate didFinishLoadingWithTask:self];
     }
     
+}
+
+- (void)movePath:(NSString *)path toPath:(NSString *)toPath {
+    
+    BOOL isSuccess = [[NSFileManager defaultManager] copyItemAtPath:path toPath:toPath error:nil];
+    if (isSuccess) {
+        [self clearData];
+        NSLog(@"rename success");
+    }else{
+        NSLog(@"rename fail");
+    }
 }
 
 //网络中断：-1005

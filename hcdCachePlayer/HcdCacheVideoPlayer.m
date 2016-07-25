@@ -232,7 +232,10 @@ typedef enum : NSUInteger {
 }
 
 
-- (void)playWithUrl:(NSURL *)url showView:(UIView *)showView andSuperView:(UIView *)superView {
+- (void)playWithUrl:(NSURL *)url
+           showView:(UIView *)showView
+       andSuperView:(UIView *)superView
+          withCache:(BOOL)withCache {
     
     NSURLComponents *components = [[NSURLComponents alloc] initWithURL:url resolvingAgainstBaseURL:NO];
     components.scheme = @"streaming";
@@ -243,7 +246,7 @@ typedef enum : NSUInteger {
     NSString *document = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).lastObject;
     NSString *cachePath =  [document stringByAppendingPathComponent:md5File];
     
-    if ([[NSFileManager defaultManager] fileExistsAtPath:cachePath]) {
+    if ([[NSFileManager defaultManager] fileExistsAtPath:cachePath] && withCache) {
         NSURL *localURL = [NSURL fileURLWithPath:cachePath];
         [self playWithVideoUrl:localURL showView:showView andSuperView:superView];
     } else {
@@ -452,6 +455,7 @@ typedef enum : NSUInteger {
     self.loadedProgress = timeInterval / totalDuration;
     [self.videoProgressView setProgress:timeInterval / totalDuration animated:YES];
 }
+
 - (void)bufferingSomeSecond
 {
     // playbackBufferEmpty会反复进入，因此在bufferingOneSecond延时播放执行完之前再调用bufferingSomeSecond都忽略
@@ -663,6 +667,7 @@ typedef enum : NSUInteger {
     
     _showView.userInteractionEnabled = YES;
     
+    [self.playerView removeFromSuperview];
     [_showView addSubview:self.playerView];
     [self.playerView mas_makeConstraints:^(MASConstraintMaker *make) {
         make.top.mas_equalTo(0);
@@ -671,6 +676,7 @@ typedef enum : NSUInteger {
         make.left.mas_equalTo(0);
     }];
     
+    [self.statusBarBgView removeFromSuperview];
     [_showView addSubview:self.statusBarBgView];
     [self.statusBarBgView mas_makeConstraints:^(MASConstraintMaker *make) {
         make.left.mas_equalTo(0);
@@ -680,6 +686,7 @@ typedef enum : NSUInteger {
     }];
     
     self.toolView.frame = CGRectMake(0, CGRectGetHeight(_showView.frame) - 44, CGRectGetWidth(_showView.frame), 44);
+    [self.toolView removeFromSuperview];
     [_showView addSubview:self.toolView];
     [self.toolView mas_makeConstraints:^(MASConstraintMaker *make) {
         make.left.mas_equalTo(0);
@@ -689,6 +696,7 @@ typedef enum : NSUInteger {
     }];
     
     self.stopButton.frame = CGRectMake(0, 0, 44, 44);
+    [self.stopButton removeFromSuperview];
     [self.toolView addSubview:self.stopButton];
     [self.stopButton mas_makeConstraints:^(MASConstraintMaker *make) {
         make.top.mas_equalTo(0);
@@ -698,6 +706,7 @@ typedef enum : NSUInteger {
     }];
     
     self.screenButton.frame = CGRectMake(CGRectGetWidth(self.toolView.frame) - 44, 0, 44, 44);
+    [self.screenButton removeFromSuperview];
     [self.toolView addSubview:self.screenButton];
     [self.screenButton mas_makeConstraints:^(MASConstraintMaker *make) {
         make.top.mas_equalTo(0);
@@ -707,6 +716,7 @@ typedef enum : NSUInteger {
     }];
     
     self.currentTimeLbl.frame = CGRectMake(44, 0, 52, 44);
+    [self.currentTimeLbl removeFromSuperview];
     [self.toolView addSubview:self.currentTimeLbl];
     [self.currentTimeLbl mas_makeConstraints:^(MASConstraintMaker *make) {
         make.left.mas_equalTo(44);
@@ -716,6 +726,7 @@ typedef enum : NSUInteger {
     }];
     
     self.totalTimeLbl.frame = CGRectMake(CGRectGetWidth(self.toolView.frame) - 52 - 44, 0, 52, 44);
+    [self.totalTimeLbl removeFromSuperview];
     [self.toolView addSubview:self.totalTimeLbl];
     [self.totalTimeLbl mas_makeConstraints:^(MASConstraintMaker *make) {
         make.top.mas_equalTo(0);
@@ -728,6 +739,7 @@ typedef enum : NSUInteger {
     self.videoProgressView.frame = CGRectMake(CGRectGetMaxX(self.currentTimeLbl.frame), 21, playSliderWidth, 20);
     
     self.playSlider.frame = CGRectMake(CGRectGetMaxX(self.currentTimeLbl.frame), 0, playSliderWidth, 44);
+    [self.playSlider removeFromSuperview];
     [self.toolView addSubview:self.playSlider];
     [self.playSlider mas_makeConstraints:^(MASConstraintMaker *make) {
         make.left.equalTo(weakSelf.currentTimeLbl.mas_right);
@@ -736,6 +748,7 @@ typedef enum : NSUInteger {
         make.bottom.mas_equalTo(0);
     }];
     
+    [self.videoProgressView removeFromSuperview];
     [self.toolView addSubview:self.videoProgressView];
     [self.videoProgressView mas_remakeConstraints:^(MASConstraintMaker *make) {
         make.left.equalTo(weakSelf.currentTimeLbl.mas_right);
@@ -745,6 +758,7 @@ typedef enum : NSUInteger {
     }];
     
     self.actIndicator.frame = CGRectMake((CGRectGetWidth(_showView.frame) - 37) / 2, (CGRectGetHeight(_showView.frame) - 37) / 2, 37, 37);
+    [self.actIndicator removeFromSuperview];
     [_showView addSubview:self.actIndicator];
     [self.actIndicator mas_makeConstraints:^(MASConstraintMaker *make) {
         make.centerX.equalTo(weakSelf.playerView);
@@ -754,6 +768,7 @@ typedef enum : NSUInteger {
     }];
     
     self.touchView.frame = CGRectMake(0, 0, CGRectGetWidth(_showView.frame), CGRectGetHeight(_showView.frame) - 44);
+    [self.touchView removeFromSuperview];
     [_showView addSubview:self.touchView];
     [self.touchView mas_makeConstraints:^(MASConstraintMaker *make) {
         make.top.equalTo(weakSelf.playerView);
@@ -762,8 +777,10 @@ typedef enum : NSUInteger {
         make.bottom.equalTo(weakSelf.playerView).offset(-44);
     }];
     
+    [self.volumeView removeFromSuperview];
     [_showView addSubview:self.volumeView];
     
+    [self.timeSheetView removeFromSuperview];
     [_showView addSubview:self.timeSheetView];
     [self.timeSheetView mas_makeConstraints:^(MASConstraintMaker *make) {
         make.center.equalTo(_showView);
@@ -771,6 +788,7 @@ typedef enum : NSUInteger {
         make.height.equalTo(@60);
     }];
     
+    [self.repeatBtn removeFromSuperview];
     [_showView addSubview:self.repeatBtn];
     [self.repeatBtn mas_makeConstraints:^(MASConstraintMaker *make) {
         make.center.equalTo(_showView);
@@ -1139,6 +1157,8 @@ typedef enum : NSUInteger {
     self.state = HCDPlayerStateStopped;
     [self.player pause];
     [self releasePlayer];
+    self.repeatBtn.hidden = YES;
+    [self toolViewHidden];
     [[NSNotificationCenter defaultCenter] postNotificationName:kHCDPlayerProgressChangedNotification object:nil];
 }
 
