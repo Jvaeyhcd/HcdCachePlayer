@@ -258,7 +258,7 @@ typedef enum : NSUInteger {
     }else{
         [self toOrientation:UIInterfaceOrientationLandscapeRight];
     }
-    [self toolViewOutHidden];
+    [self showToolView];
 }
 
 - (void)halfScreen {
@@ -356,7 +356,7 @@ typedef enum : NSUInteger {
 - (void)playerItemPlaybackStalled:(NSNotification *)notification
 {
     // 这里网络不好的时候，就会进入，不做处理，会在playbackBufferEmpty里面缓存之后重新播放
-    NSLog(@"buffing-----buffing");
+    NSLog(@"buffing----buffing");
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
@@ -570,9 +570,9 @@ typedef enum : NSUInteger {
         _videoProgressView = [[UIProgressView alloc] initWithProgressViewStyle:UIProgressViewStyleDefault];
         _videoProgressView.progressTintColor = [UIColor colorWithRed:1 green:1 blue:1 alpha:0.5];  //填充部分颜色
         _videoProgressView.trackTintColor = [UIColor clearColor];   // 未填充部分颜色
-        _videoProgressView.layer.cornerRadius = 1.5;
+        _videoProgressView.layer.cornerRadius = 0.5;
         _videoProgressView.layer.masksToBounds = YES;
-        CGAffineTransform transform = CGAffineTransformMakeScale(1.0, 1.5);
+        CGAffineTransform transform = CGAffineTransformMakeScale(1.0, 1.0);
         _videoProgressView.transform = transform;
     }
     return _videoProgressView;
@@ -663,7 +663,6 @@ typedef enum : NSUInteger {
     
     _showView.userInteractionEnabled = YES;
     
-//    self.playerView.frame = CGRectMake(0, 0, CGRectGetWidth(_showView.frame), CGRectGetHeight(_showView.frame));
     [_showView addSubview:self.playerView];
     [self.playerView mas_makeConstraints:^(MASConstraintMaker *make) {
         make.top.mas_equalTo(0);
@@ -727,13 +726,6 @@ typedef enum : NSUInteger {
     
     CGFloat playSliderWidth = CGRectGetWidth(self.toolView.frame) - 2 * CGRectGetMaxX(self.currentTimeLbl.frame);
     self.videoProgressView.frame = CGRectMake(CGRectGetMaxX(self.currentTimeLbl.frame), 21, playSliderWidth, 20);
-    [self.toolView addSubview:self.videoProgressView];
-    [self.videoProgressView mas_remakeConstraints:^(MASConstraintMaker *make) {
-        make.left.equalTo(weakSelf.currentTimeLbl.mas_right);
-        make.right.equalTo(weakSelf.totalTimeLbl.mas_left);
-        make.centerY.equalTo(weakSelf.totalTimeLbl.mas_centerY);
-        make.height.mas_equalTo(1);
-    }];
     
     self.playSlider.frame = CGRectMake(CGRectGetMaxX(self.currentTimeLbl.frame), 0, playSliderWidth, 44);
     [self.toolView addSubview:self.playSlider];
@@ -742,6 +734,14 @@ typedef enum : NSUInteger {
         make.top.mas_equalTo(0);
         make.right.equalTo(weakSelf.totalTimeLbl.mas_left);
         make.bottom.mas_equalTo(0);
+    }];
+    
+    [self.toolView addSubview:self.videoProgressView];
+    [self.videoProgressView mas_remakeConstraints:^(MASConstraintMaker *make) {
+        make.left.equalTo(weakSelf.currentTimeLbl.mas_right);
+        make.right.equalTo(weakSelf.totalTimeLbl.mas_left);
+        make.centerY.equalTo(weakSelf.playSlider.mas_centerY).offset(1);
+        make.height.mas_equalTo(1);
     }];
     
     self.actIndicator.frame = CGRectMake((CGRectGetWidth(_showView.frame) - 37) / 2, (CGRectGetHeight(_showView.frame) - 37) / 2, 37, 37);
@@ -809,7 +809,7 @@ typedef enum : NSUInteger {
     //点击一次
     if (tap.numberOfTapsRequired == 1) {
         if (self.toolView.hidden) {
-            [self toolViewOutHidden];
+            [self showToolView];
         } else {
             [self toolViewHidden];
         }
@@ -833,7 +833,6 @@ typedef enum : NSUInteger {
 }
 
 - (void)handlePan:(UIPanGestureRecognizer *)recognizer {
-    // NSLog(@"gesture translatedPoint  xxoo xxoo");
     
     CGPoint touchPoint = [recognizer locationInView:self.touchView];
     NSLog(@"(%f,%f)", touchPoint.x, touchPoint.y);
@@ -901,7 +900,7 @@ typedef enum : NSUInteger {
             [UIScreen mainScreen].brightness -= ((touchPoint.y - _touchBeginPoint.y) / 10000);
         } else if (HCDPlayerControlTypeNone == _controlType) {
             if (self.toolView.hidden) {
-                [self toolViewOutHidden];
+                [self showToolView];
             } else {
                 [self toolViewHidden];
             }
@@ -967,7 +966,7 @@ typedef enum : NSUInteger {
 
 #pragma mark - 控制条退出隐藏
 
-- (void)toolViewOutHidden {
+- (void)showToolView {
     
     if (!self.repeatBtn.hidden) {
         return;
@@ -1094,7 +1093,7 @@ typedef enum : NSUInteger {
  *  重播
  */
 - (void)repeatPlay {
-    [self toolViewOutHidden];
+    [self showToolView];
     [self resumeOrPause];
 }
 

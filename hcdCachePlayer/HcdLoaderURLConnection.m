@@ -126,7 +126,7 @@
 {
     [self.pendingRequests addObject:loadingRequest];
     [self dealWithLoadingRequest:loadingRequest];
-    NSLog(@"----%@", loadingRequest);
+    NSLog(@"----loadingRequest----:%@", loadingRequest);
     return YES;
 }
 
@@ -170,7 +170,7 @@
     return [components URL];
 }
 
-#pragma mark - TBVideoRequestTaskDelegate
+#pragma mark - HcdVideoRequestTaskDelegate
 
 - (void)task:(HcdVideoRequestTask *)task didReciveVideoLength:(NSUInteger)videoLength mimeType:(NSString *)mimeType {
     

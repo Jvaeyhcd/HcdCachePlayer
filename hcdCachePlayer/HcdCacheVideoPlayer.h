@@ -81,6 +81,16 @@ typedef NS_ENUM(NSInteger, HCDPlayerState) {
 - (void)fullScreen;
 
 /**
+ *  隐藏工具条
+ */
+- (void)toolViewHidden;
+
+/**
+ *  显示工具条
+ */
+- (void)showToolView;
+
+/**
  *  半屏幕
  */
 - (void)halfScreen;

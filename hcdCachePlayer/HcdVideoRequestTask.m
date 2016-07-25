@@ -159,6 +159,7 @@
     if (self.taskArr.count < 2) {
         _isFinishLoad = YES;
         
+        //使用md5将请求url地址加密后作为缓存本地文件的文件名
         NSString *md5File = [NSString stringWithFormat:@"%@.mp4", [[_url absoluteString] stringToMD5]];
         
         //这里自己写需要保存数据的路径
@@ -173,7 +174,7 @@
             }else{
                 NSLog(@"rename fail");
             }
-            NSLog(@"----%@", movePath);
+            NSLog(@"----movePath----:%@", movePath);
         }
     }
     

@@ -27,7 +27,7 @@
     
     [self.videoList addObject:@"http://baobab.wdjcdn.com/14564977406580.mp4"];
     [self.videoList addObject:@"http://baobab.wdjcdn.com/1457521866561_5888_854x480.mp4"];
-    [self.videoList addObject:@"http://baobab.wdjcdn.com/1455969783448_5560_854x480.mp4"];
+    [self.videoList addObject:@"http://oaundxu29.bkt.clouddn.com/Ferr2DTerrainunity3d.mp4"];
     
     [self.view addSubview:self.tableView];
 }
