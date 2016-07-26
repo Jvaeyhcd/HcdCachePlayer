@@ -43,6 +43,11 @@ typedef NS_ENUM(NSInteger, HCDPlayerState) {
 @property (nonatomic, readonly) CGFloat        progress;                //播放进度0~1之间
 @property (nonatomic, assign  ) BOOL           stopInBackground;        //是否在后台播放，默认YES
 
+@property (nonatomic, assign  ) NSInteger playCount;                    //当前播放次数
+@property (nonatomic, assign  ) NSInteger playRepatCount;               //重复播放次数
+
+@property (nonatomic, copy    ) void(^playNextBlock)();                 //播放下一个block
+
 + (instancetype)sharedInstance;
 
 /**

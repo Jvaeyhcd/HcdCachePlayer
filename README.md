@@ -6,7 +6,7 @@ HcdCachePlayer
 [![Tag](https://img.shields.io/github/tag/Jvaeyhcd/HcdCachePlayer.svg
 )](http://cocoapods.org/pods/HcdCachePlayer)
 [![Author](https://img.shields.io/badge/author-Jvaeyhcd-f07c3d.svg)](http://www.jvaeyhcd.cc)
-[![GitHub stars](https://img.shields.io/github/stars/Jvaeyhcd/HcdCachePlayer.svg?style=social&label=Star&maxAge=2592000)](https://github.com/Jvaeyhcd/HcdCachePlayer)
+<!-- [![GitHub stars](https://img.shields.io/github/stars/Jvaeyhcd/HcdCachePlayer.svg?style=social&label=Star&maxAge=2592000)](https://github.com/Jvaeyhcd/HcdCachePlayer) -->
 
 HcdCacheVideoPlayer实现了边下边播在线视频，并且能将在线视频缓存在本地，支持左右滑动手势来调整视频播放进度，上下滑动手势调节音量大小，并且支持全屏播放。此控件使用了[Masonry](https://github.com/SnapKit/Masonry)自动布局来实现全屏播放时的界面布局。
 
@@ -55,7 +55,10 @@ videoView.frame = CGRectMake(0, 64, kScreenWidth, kScreenWidth * 0.5625);
 
 NSURL *url = [NSURL URLWithString:@""];//您要播放的url地址
 
-[play playWithUrl:url showView:videoView andSuperView:self.view];
+[play playWithUrl:[NSURL URLWithString:self.videoUrlStr]
+         showView:videoView
+     andSuperView:self.view
+        withCache:YES];
 ```
 
 ### TODO

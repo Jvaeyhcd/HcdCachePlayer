@@ -29,9 +29,9 @@
     [self.view addSubview:videoView];
     
     [_play playWithUrl:[NSURL URLWithString:self.videoUrlStr]
-             showView:videoView
-         andSuperView:self.view
-            withCache:YES];
+              showView:videoView
+          andSuperView:self.view
+             withCache:YES];
     
     NSLog(@"%f", [HcdCacheVideoPlayer allVideoCacheSize]);
     

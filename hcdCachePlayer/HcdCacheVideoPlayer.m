@@ -129,6 +129,8 @@ typedef enum : NSUInteger {
         _stopInBackground = YES;
         _isFullScreen = NO;
         _canFullScreen = YES;
+        _playRepatCount = 1;
+        _playCount = 1;
         
         UIDeviceOrientation orientation = [[UIDevice currentDevice] orientation];
         switch (orientation) {
@@ -157,6 +159,7 @@ typedef enum : NSUInteger {
     
     [self.player pause];
     [self releasePlayer];
+    
     self.isPauseByUser = NO;
     self.loadedProgress = 0;
     self.duration = 0;
@@ -190,11 +193,11 @@ typedef enum : NSUInteger {
     } else {
         [self.player replaceCurrentItemWithPlayerItem:self.currentPlayerItem];
     }
-//    self.currentPlayerLayer       = [AVPlayerLayer playerLayerWithPlayer:self.player];
-//    self.currentPlayerLayer.frame = CGRectMake(0, 44, showView.bounds.size.width, showView.bounds.size.height - 44);
-//    self.currentPlayerLayer.videoGravity = AVLayerVideoGravityResizeAspect;
-//    
-//    [showView.layer addSublayer:self.currentPlayerLayer];
+    //    self.currentPlayerLayer       = [AVPlayerLayer playerLayerWithPlayer:self.player];
+    //    self.currentPlayerLayer.frame = CGRectMake(0, 44, showView.bounds.size.width, showView.bounds.size.height - 44);
+    //    self.currentPlayerLayer.videoGravity = AVLayerVideoGravityResizeAspect;
+    //
+    //    [showView.layer addSublayer:self.currentPlayerLayer];
     
     [(AVPlayerLayer *)self.playerView.layer setPlayer:self.player];
     
@@ -228,7 +231,7 @@ typedef enum : NSUInteger {
     
     [self setVideoToolView];
     
-//    [self updateOrientation];
+    //    [self updateOrientation];
 }
 
 
@@ -321,7 +324,7 @@ typedef enum : NSUInteger {
             
             self.actIndicator.hidden = NO;
             [self.actIndicator startAnimating];
-//            [[XCHudHelper sharedInstance] showHudOnView:_showView caption:nil image:nil acitivity:YES autoHideTime:0];
+            //            [[XCHudHelper sharedInstance] showHudOnView:_showView caption:nil image:nil acitivity:YES autoHideTime:0];
         }
         
     }];
@@ -347,13 +350,27 @@ typedef enum : NSUInteger {
 
 - (void)playerItemDidPlayToEnd:(NSNotification *)notification
 {
-//    [self stop];
-    //重新播放
-    self.repeatBtn.hidden = NO;
-    [self toolViewHidden];
-    self.state = HCDPlayerStateFinish;
-    [self.stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_play")] forState:UIControlStateNormal];
-    [self.stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_play_hl")] forState:UIControlStateHighlighted];
+    //    [self stop];
+    
+    //如果当前播放次数小于重复播放次数，继续重新播放
+    if (self.playCount < self.playRepatCount) {
+        self.playCount++;
+        [self seekToTime:0];
+        [self updateCurrentTime:0];
+    } else {
+        
+        //如果有播放下一个的需求就播放下一个
+        if (self.playNextBlock) {
+            self.playNextBlock();
+        } else {
+            //重新播放
+            self.repeatBtn.hidden = NO;
+            [self toolViewHidden];
+            self.state = HCDPlayerStateFinish;
+            [self.stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_play")] forState:UIControlStateNormal];
+            [self.stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_play_hl")] forState:UIControlStateHighlighted];
+        }
+    }
 }
 
 //在监听播放器状态中处理比较准确
@@ -382,7 +399,7 @@ typedef enum : NSUInteger {
         [self calculateDownloadProgress:playerItem];
         
     } else if ([HCDVideoPlayerItemPlaybackBufferEmptyKeyPath isEqualToString:keyPath]) { //监听播放器在缓冲数据的状态
-//        [[XCHudHelper sharedInstance] showHudOnView:_showView caption:nil image:nil acitivity:YES autoHideTime:0];
+        //        [[XCHudHelper sharedInstance] showHudOnView:_showView caption:nil image:nil acitivity:YES autoHideTime:0];
         [self.actIndicator startAnimating];
         self.actIndicator.hidden = NO;
         if (playerItem.isPlaybackBufferEmpty) {
@@ -498,7 +515,7 @@ typedef enum : NSUInteger {
 - (void)setState:(HCDPlayerState)state
 {
     if (state != HCDPlayerStateBuffering) {
-//        [[XCHudHelper sharedInstance] hideHud];
+        //        [[XCHudHelper sharedInstance] hideHud];
         [self.actIndicator stopAnimating];
         self.actIndicator.hidden = YES;
     }
@@ -867,7 +884,7 @@ typedef enum : NSUInteger {
     }
     
     if ([(UIPanGestureRecognizer *)recognizer state] == UIGestureRecognizerStateChanged) {
-
+        
         //如果移动的距离过于小, 就判断为没有移动
         if (fabs(touchPoint.x - _touchBeginPoint.x) < LeastMoveDistance && fabs(touchPoint.y - _touchBeginPoint.y) < LeastMoveDistance) {
             return;
@@ -1193,6 +1210,13 @@ typedef enum : NSUInteger {
     [self.player removeTimeObserver:self.playbackTimeObserver];
     self.playbackTimeObserver = nil;
     self.currentPlayerItem = nil;
+    
+    if (self.resouerLoader.task) {
+        [self.resouerLoader.task cancel];
+        self.resouerLoader.task = nil;
+        self.resouerLoader = nil;
+    }
+    
 }
 
 #pragma mark - HCDLoaderURLConnectionDelegate
@@ -1232,7 +1256,7 @@ typedef enum : NSUInteger {
     }
     
     NSLog(@"%@", str);
-//    [XCHudHelper showMessage:str];
+    //    [XCHudHelper showMessage:str];
     
 }
 
@@ -1269,7 +1293,7 @@ typedef enum : NSUInteger {
         return;
     }
     
-//    UIInterfaceOrientation currentOrientation = [UIApplication sharedApplication].statusBarOrientation;
+    //    UIInterfaceOrientation currentOrientation = [UIApplication sharedApplication].statusBarOrientation;
     if (_currentOrientation == orientation) {
         return;
     }
@@ -1318,11 +1342,11 @@ typedef enum : NSUInteger {
     
     _currentOrientation = orientation;
     
-//    
-//    [UIView beginAnimations:nil context:nil];
-//    
-//    [UIView setAnimationDuration:0.5];
-//    [UIView commitAnimations];
+    //
+    //    [UIView beginAnimations:nil context:nil];
+    //
+    //    [UIView setAnimationDuration:0.5];
+    //    [UIView commitAnimations];
     [UIView animateWithDuration:0.5 animations:^{
         [[UIApplication sharedApplication] setStatusBarOrientation:_currentOrientation animated:YES];
         //旋转视频播放的view和显示亮度的view
@@ -1335,7 +1359,7 @@ typedef enum : NSUInteger {
 
 //根据状态条旋转的方向来旋转 avplayerView
 -(CGAffineTransform)getOrientation:(UIInterfaceOrientation)orientation{
-//    UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
+    //    UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
     
     if (orientation == UIInterfaceOrientationPortrait) {
         [self toPortraitUpdate];
