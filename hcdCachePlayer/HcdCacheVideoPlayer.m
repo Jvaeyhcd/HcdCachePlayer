@@ -318,8 +318,9 @@ typedef enum : NSUInteger {
         [self.player play];
         if (!self.currentPlayerItem.isPlaybackLikelyToKeepUp) {
             self.state = HCDPlayerStateBuffering;
-            [self.actIndicator startAnimating];
+            
             self.actIndicator.hidden = NO;
+            [self.actIndicator startAnimating];
 //            [[XCHudHelper sharedInstance] showHudOnView:_showView caption:nil image:nil acitivity:YES autoHideTime:0];
         }
         
@@ -1190,7 +1191,6 @@ typedef enum : NSUInteger {
     [self.currentPlayerItem removeObserver:self forKeyPath:HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath];
     [self.currentPlayerItem removeObserver:self forKeyPath:HCDVideoPlayerItemPresentationSizeKeyPath];
     [self.player removeTimeObserver:self.playbackTimeObserver];
-    self.player = nil;
     self.playbackTimeObserver = nil;
     self.currentPlayerItem = nil;
 }
@@ -1373,6 +1373,11 @@ typedef enum : NSUInteger {
     }else{
         [[UIApplication sharedApplication] setStatusBarHidden:NO];
     }
+}
+
+- (void)dealloc
+{
+    [self releasePlayer];
 }
 
 @end

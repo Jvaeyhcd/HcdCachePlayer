@@ -26,7 +26,7 @@
     self.title = @"HcdCachePlayerDemo";
     
     [self.videoList addObject:@"http://baobab.wdjcdn.com/14564977406580.mp4"];
-    [self.videoList addObject:@"http://baobab.wdjcdn.com/1457521866561_5888_854x480.mp4"];
+    [self.videoList addObject:@"http://mpv.videocc.net/4559da324b/0/4559da324b6c813324a2289f59baaa40_1.mp4"];
     [self.videoList addObject:@"http://oaundxu29.bkt.clouddn.com/Ferr2DTerrainunity3d.mp4"];
     
     [self.view addSubview:self.tableView];
