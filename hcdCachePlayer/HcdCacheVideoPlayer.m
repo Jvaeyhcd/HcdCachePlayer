@@ -307,6 +307,10 @@ typedef enum : NSUInteger {
     return cacheVideoSize;
 }
 
++ (void)clearVideoCache:(NSString *)url {
+    
+}
+
 - (void)seekToTime:(CGFloat)seconds {
     if (self.state == HCDPlayerStateStopped) {
         return;

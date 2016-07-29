@@ -116,4 +116,11 @@ typedef NS_ENUM(NSInteger, HCDPlayerState) {
  */
 + (double)allVideoCacheSize;
 
+/**
+ *  清楚某个链接的缓存
+ *
+ *  @param url 链接地址
+ */
++ (void)clearVideoCache:(NSString *)url;
+
 @end
