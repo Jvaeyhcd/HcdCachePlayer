@@ -5,6 +5,7 @@ HcdCachePlayer
 [![Platform](https://img.shields.io/cocoapods/p/HcdCachePlayer.svg)](http://cocoapods.org/pods/HcdCachePlayer)
 [![Tag](https://img.shields.io/github/tag/Jvaeyhcd/HcdCachePlayer.svg
 )](http://cocoapods.org/pods/HcdCachePlayer)
+[![Travis CI](https://api.travis-ci.org/Jvaeyhcd/HcdCachePlayer.svg?branch=master)](https://travis-ci.org/Jvaeyhcd/HcdCachePlayer)
 [![Author](https://img.shields.io/badge/author-Jvaeyhcd-f07c3d.svg)](http://www.jvaeyhcd.cc)
 <!-- [![GitHub stars](https://img.shields.io/github/stars/Jvaeyhcd/HcdCachePlayer.svg?style=social&label=Star&maxAge=2592000)](https://github.com/Jvaeyhcd/HcdCachePlayer) -->
 
