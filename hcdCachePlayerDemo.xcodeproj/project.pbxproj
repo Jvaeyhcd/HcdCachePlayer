@@ -234,6 +234,7 @@
 				TargetAttributes = {
 					0C168D461D2666A30008F58A = {
 						CreatedOnToolsVersion = 7.3.1;
+						DevelopmentTeam = 3G7X5WUBT4;
 					};
 				};
 			};
@@ -443,11 +444,14 @@
 			baseConfigurationReference = FF4280558EFEC316421C29BE /* Pods-hcdCachePlayerDemo.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Distribution: Chengdu Funmi Technology Co., Ltd. (3G7X5WUBT4)";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution: Chengdu Funmi Technology Co., Ltd. (3G7X5WUBT4)";
 				INFOPLIST_FILE = hcdCachePlayerDemo/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = cc.jvaeyhcd.hcdCachePlayerDemo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "72552391-6fea-4fb7-9426-1f3ad964696e";
 			};
 			name = Debug;
 		};
@@ -456,11 +460,14 @@
 			baseConfigurationReference = E71C91B36727BE3EB95247E8 /* Pods-hcdCachePlayerDemo.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Distribution: Chengdu Funmi Technology Co., Ltd. (3G7X5WUBT4)";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution: Chengdu Funmi Technology Co., Ltd. (3G7X5WUBT4)";
 				INFOPLIST_FILE = hcdCachePlayerDemo/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = cc.jvaeyhcd.hcdCachePlayerDemo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "72552391-6fea-4fb7-9426-1f3ad964696e";
 			};
 			name = Release;
 		};
