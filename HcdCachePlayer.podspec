@@ -16,7 +16,7 @@ Pod::Spec.new do |s|
   #
 
   s.name         = "HcdCachePlayer"
-  s.version      = "0.0.9"
+  s.version      = "0.1.0"
   s.summary      = "A video player with cache."
 
   # This description is used to generate tags and improve search results.
@@ -133,7 +133,6 @@ Pod::Spec.new do |s|
   s.requires_arc = true
 
   # s.xcconfig = { "HEADER_SEARCH_PATHS" => "$(SDKROOT)/usr/include/libxml2" }
-  s.xcconfig = { "HEADER_SEARCH_PATHS" => "$(PODS_ROOT)/Masonry/" }
   s.dependency "Masonry"
 
 end
