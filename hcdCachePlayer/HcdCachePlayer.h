@@ -14,7 +14,7 @@
 #import "HcdCacheVideoPlayer.h"
 #import "HcdLoaderURLConnection.h"
 #import "NSString+HCD.h"
-#import <Masonry/Masonry.h>
+#import "Masonry.h"
 #import "HcdPlayerView.h"
 #import "HcdTimeSheetView.h"
 #import "HcdAudioPlayer.h"

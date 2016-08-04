@@ -452,6 +452,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = cc.jvaeyhcd.hcdCachePlayerDemo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "72552391-6fea-4fb7-9426-1f3ad964696e";
+				USER_HEADER_SEARCH_PATHS = "$(PODS_ROOT)/**";
 			};
 			name = Debug;
 		};
@@ -468,6 +469,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = cc.jvaeyhcd.hcdCachePlayerDemo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "72552391-6fea-4fb7-9426-1f3ad964696e";
+				USER_HEADER_SEARCH_PATHS = "$(PODS_ROOT)/**";
 			};
 			name = Release;
 		};
