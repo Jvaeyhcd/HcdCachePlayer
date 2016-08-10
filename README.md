@@ -1,5 +1,5 @@
-HcdCachePlayer
-----
+# HcdCachePlayer
+
 [![Version](https://img.shields.io/cocoapods/v/HcdCachePlayer.svg?style=flat)](http://cocoapods.org/pods/HcdCachePlayer)
 [![License](https://img.shields.io/github/license/Jvaeyhcd/HcdCachePlayer.svg)](http://cocoapods.org/pods/HcdCachePlayer)
 [![Platform](https://img.shields.io/cocoapods/p/HcdCachePlayer.svg)](http://cocoapods.org/pods/HcdCachePlayer)
@@ -13,20 +13,20 @@ HcdCacheVideoPlayer实现了边下边播在线视频，并且能将在线视频�
 
 ![Demo](https://raw.githubusercontent.com/Jvaeyhcd/HcdCachePlayer/master/screen.gif)
 
-### 特性
+## 特性
 * 使用AVPlayer开发，带缓存效果，对于同一个视频不用每次都去请求网络
 * 支持横、竖屏切换
 * 支持在视频上左右滑动调节播放进度
 * 视频右边上下滑动调节音量
 * 视频左边上下滑动调节亮度
 
-### 安装
+## 安装
 
-#### 原始方法
+### 原始方法
 
 可以可手动下载解压，然后将hcdCachePlayer文件夹拖入您的项目中，需要使用到MobileCoreServices.framework和AVFoundation.framework这两个库。
 
-#### CocoaPods
+### CocoaPods
 
 采用CocoaPods方法安装，在您的Podfile文件中添加
 ``` bash
@@ -42,7 +42,7 @@ pod install --verbose --no-repo-update
 pod update --verbose --no-repo-update
 ```
 
-### 用法
+## 用法
 在需要使用播放器的页面
 ``` objc
 #import "HcdCacheVideoPlayer.h"
@@ -62,7 +62,7 @@ NSURL *url = [NSURL URLWithString:@""];//您要播放的url地址
         withCache:YES];
 ```
 
-### TODO
+## TODO
 
 使用AVPlayer封装带缓存的音乐播放器。
 如果您觉得对您有所帮助您可以star一下，如果您在使用过程中发现什么bug欢迎Issues我。
