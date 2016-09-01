@@ -42,13 +42,13 @@ typedef NS_ENUM(NSInteger, HCDPlayerState) {
 @property (nonatomic, readonly) CGFloat        current;                 //当前播放时间
 @property (nonatomic, readonly) CGFloat        progress;                //播放进度0~1之间
 @property (nonatomic, assign  ) BOOL           stopInBackground;        //是否在后台播放，默认YES
+@property (nonatomic, assign  ) BOOL           isUsePanGesture;            //是否使用手势，默认开启
+@property (nonatomic, assign  ) NSUInteger     stopAfterPauseSec;       //pause 之后多少秒销户player stop player
 
 @property (nonatomic, assign  ) NSInteger playCount;                    //当前播放次数
 @property (nonatomic, assign  ) NSInteger playRepatCount;               //重复播放次数
 
 @property (nonatomic, copy    ) void(^playNextBlock)();                 //播放下一个block
-
-+ (instancetype)sharedInstance;
 
 /**
  *  播放服务器的视频，先判断本地是否有缓存文件，缓存文件名为连接的url经过md5加密后生成的字符串
@@ -56,11 +56,17 @@ typedef NS_ENUM(NSInteger, HCDPlayerState) {
  *  @param url       视频地址
  *  @param showView  显示的View
  *  @param withCache 是否播放缓存的文件
+  * @param coverImage 未播放时显示的封面图片
  */
-- (void)playWithUrl:(NSURL *)url
-           showView:(UIView *)showView
-       andSuperView:(UIView *)superView
-          withCache:(BOOL)withCache;
+- (void)setupWithUrl:(NSURL *)url
+            showView:(UIView *)showView
+           withCache:(BOOL)withCache
+          coverImage:(UIImage *)coverImage;
+
+/**
+ *  play whenever pause or stop
+ */
+- (void)readyAndPlay;
 
 /**
  *  指定到某一事件点开始播放

@@ -23,6 +23,7 @@
 
 #define LeastMoveDistance 15
 #define TotalScreenTime 90
+#define kDefaultStopAfterPauseSec 5
 
 NSString *const kHCDPlayerStateChangedNotification    = @"HCDPlayerStateChangedNotification";
 NSString *const kHCDPlayerProgressChangedNotification = @"HCDPlayerProgressChangedNotification";
@@ -75,12 +76,16 @@ typedef enum : NSUInteger {
 @property (nonatomic, assign) BOOL           isPauseByUser;           //是否被用户暂停
 @property (nonatomic, assign) BOOL           isLocalVideo;            //是否播放本地文件
 @property (nonatomic, assign) BOOL           isFinishLoad;            //是否下载完毕
+@property (nonatomic, assign) BOOL           isReady;                 //外面是否准备好,给外部看的状态
+@property (nonatomic, assign) BOOL           isPlayerReady;           //播放器是否准备好, 内部状态， ？AVPlayerStatusreadyAndPlay
+@property (nonatomic, assign) BOOL           isSliderChanging;        //精度条调节
 
+@property (nonatomic, weak  ) NSURL          *currentURL;             //播放地址
+@property (nonatomic, weak  ) UIImage        *coverImage;             //停止播放或未启动播放时候的封面图片
+@property (nonatomic, weak  ) UIView         *originalSuperView;      //原始的父View
 @property (nonatomic, weak  ) UIView         *showView;
-@property (nonatomic, assign) CGRect         showViewRect;            //视频展示ViewRect
 @property (nonatomic, strong) HcdPlayerView  *playerView;
 @property (nonatomic, strong) UIView         *touchView;              //事件响应View
-@property (nonatomic, weak  ) UIView         *playerSuperView;        //播放界面的父页面
 
 @property (nonatomic, strong) UIView         *statusBarBgView;        //全屏状态栏的背景view
 @property (nonatomic, strong) UIView         *toolView;
@@ -106,17 +111,6 @@ typedef enum : NSUInteger {
 
 @implementation HcdCacheVideoPlayer
 
-+ (instancetype)sharedInstance {
-    
-    static dispatch_once_t onceToken;
-    static HcdCacheVideoPlayer *instance;
-    
-    dispatch_once(&onceToken, ^{
-        instance = [[self alloc]init];
-    });
-    return instance;
-}
-
 - (instancetype)init
 {
     self = [super init];
@@ -127,10 +121,15 @@ typedef enum : NSUInteger {
         _current  = 0;
         _state = HCDPlayerStateStopped;
         _stopInBackground = YES;
+        _isUsePanGesture = YES;
         _isFullScreen = NO;
         _canFullScreen = YES;
         _playRepatCount = 1;
         _playCount = 1;
+        _isReady = NO;
+        _isPlayerReady = NO;
+        _isSliderChanging = NO;
+        _stopAfterPauseSec = kDefaultStopAfterPauseSec;
         
         UIDeviceOrientation orientation = [[UIDevice currentDevice] orientation];
         switch (orientation) {
@@ -154,22 +153,21 @@ typedef enum : NSUInteger {
     return self;
 }
 
-- (void)playWithVideoUrl:(NSURL *)url showView:(UIView *)showView andSuperView:(UIView *)superView
+
+- (void)setupWithVideoUrl:(NSURL *)url showView:(UIView *)showView coverImage:(UIImage *)coverImage
 {
-    
-    [self.player pause];
-    [self releasePlayer];
-    
     self.isPauseByUser = NO;
     self.loadedProgress = 0;
     self.duration = 0;
     self.current  = 0;
+    self.coverImage = coverImage;
+    self.currentURL = url;
+    self.originalSuperView = showView.superview;
     
     _showView = showView;
-    _showViewRect = showView.frame;
+
     _showView.backgroundColor = [UIColor blackColor];
-    _playerSuperView = superView;
-    
+
     NSString *str = [url absoluteString];
     //如果是ios  < 7 或者是本地资源，直接播放
     if ([str hasPrefix:@"https"] || [str hasPrefix:@"http"]) {
@@ -193,6 +191,8 @@ typedef enum : NSUInteger {
     } else {
         [self.player replaceCurrentItemWithPlayerItem:self.currentPlayerItem];
     }
+    
+    
     //    self.currentPlayerLayer       = [AVPlayerLayer playerLayerWithPlayer:self.player];
     //    self.currentPlayerLayer.frame = CGRectMake(0, 44, showView.bounds.size.width, showView.bounds.size.height - 44);
     //    self.currentPlayerLayer.videoGravity = AVLayerVideoGravityResizeAspect;
@@ -200,45 +200,31 @@ typedef enum : NSUInteger {
     //    [showView.layer addSublayer:self.currentPlayerLayer];
     
     [(AVPlayerLayer *)self.playerView.layer setPlayer:self.player];
-    
+
     [self.currentPlayerItem addObserver:self forKeyPath:HCDVideoPlayerItemStatusKeyPath options:NSKeyValueObservingOptionNew context:nil];
     [self.currentPlayerItem addObserver:self forKeyPath:HCDVideoPlayerItemLoadedTimeRangesKeyPath options:NSKeyValueObservingOptionNew context:nil];
     [self.currentPlayerItem addObserver:self forKeyPath:HCDVideoPlayerItemPlaybackBufferEmptyKeyPath options:NSKeyValueObservingOptionNew context:nil];
     [self.currentPlayerItem addObserver:self forKeyPath:HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath options:NSKeyValueObservingOptionNew context:nil];
     [self.currentPlayerItem addObserver:self forKeyPath:HCDVideoPlayerItemPresentationSizeKeyPath options:NSKeyValueObservingOptionNew context:nil];
     
+
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appDidEnterBackground) name:UIApplicationWillResignActiveNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appDidEnterPlayGround) name:UIApplicationDidBecomeActiveNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(playerItemDidPlayToEnd:) name:AVPlayerItemDidPlayToEndTimeNotification object:self.currentPlayerItem];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(playerItemPlaybackStalled:) name:AVPlayerItemPlaybackStalledNotification object:self.currentPlayerItem];
     
-    if ([url.scheme isEqualToString:@"file"]) {
-        // 如果已经在HCDPlayerStatePlaying，则直接发通知，否则设置状态
-        if (self.state == HCDPlayerStatePlaying) {
-            [[NSNotificationCenter defaultCenter] postNotificationName:kHCDPlayerStateChangedNotification object:nil];
-        } else {
-            self.state = HCDPlayerStatePlaying;
-        }
-        
-    } else {
-        // 如果已经在HCDPlayerStateBuffering，则直接发通知，否则设置状态
-        if (self.state == HCDPlayerStateBuffering) {
-            [[NSNotificationCenter defaultCenter] postNotificationName:kHCDPlayerStateChangedNotification object:nil];
-        } else {
-            self.state = HCDPlayerStateBuffering;
-        }
-    }
     
     [self setVideoToolView];
     
     //    [self updateOrientation];
 }
 
-
-- (void)playWithUrl:(NSURL *)url
+- (void)setupWithUrl:(NSURL *)url
            showView:(UIView *)showView
-       andSuperView:(UIView *)superView
-          withCache:(BOOL)withCache {
+          withCache:(BOOL)withCache
+         coverImage:(UIImage *)coverImage
+{
+    
     
     NSURLComponents *components = [[NSURLComponents alloc] initWithURL:url resolvingAgainstBaseURL:NO];
     components.scheme = @"streaming";
@@ -251,20 +237,101 @@ typedef enum : NSUInteger {
     
     if ([[NSFileManager defaultManager] fileExistsAtPath:cachePath] && withCache) {
         NSURL *localURL = [NSURL fileURLWithPath:cachePath];
-        [self playWithVideoUrl:localURL showView:showView andSuperView:superView];
+        [self setupWithVideoUrl:localURL showView:showView coverImage:coverImage];
     } else {
-        [self playWithVideoUrl:url showView:showView andSuperView:superView];
+        [self setupWithVideoUrl:url showView:showView coverImage:coverImage];
+    }
+    
+}
+
+/**
+ *  play whenever pause or stop
+ */
+- (void)readyAndPlay
+{
+    @synchronized(self) {
+        if ([self.currentURL.scheme isEqualToString:@"file"]) {
+            // 如果已经在HCDPlayerStatePlaying，则直接发通知，否则设置状态
+            if (self.state == HCDPlayerStatePlaying) {
+                [[NSNotificationCenter defaultCenter] postNotificationName:kHCDPlayerStateChangedNotification object:nil];
+            } else {
+                self.state = HCDPlayerStatePlaying;
+            }
+            
+        } else {
+            // 如果已经在HCDPlayerStateBuffering，则直接发通知，否则设置状态
+            if (self.state == HCDPlayerStateBuffering) {
+                [[NSNotificationCenter defaultCenter] postNotificationName:kHCDPlayerStateChangedNotification object:nil];
+            } else {
+                self.state = HCDPlayerStateBuffering;
+            }
+        }
+        
+
+        self.isReady = YES;
+        if (self.isPlayerReady) {
+            [_hiddenTimer invalidate];
+            _hiddenTimer = [NSTimer scheduledTimerWithTimeInterval:5.0 target:self selector:@selector(toolViewHidden) userInfo:nil repeats:NO];
+            [self monitoringPlayback:self.currentPlayerItem];// 给播放器添加计时器
+        }
+        else if(!self.currentPlayerItem) {
+            [self reborn];
+        }
+
     }
 }
 
+
+//reborn after stop
+- (void)reborn
+{
+    NSString *str = [self.currentURL absoluteString];
+    //如果是ios  < 7 或者是本地资源，直接播放
+    if ([str hasPrefix:@"https"] || [str hasPrefix:@"http"]) {
+        
+        self.resouerLoader          = [[HcdLoaderURLConnection alloc] init];
+        self.resouerLoader.delegate = self;
+        NSURL *playUrl              = [self.resouerLoader getSchemeVideoURL:self.currentURL];
+        self.videoURLAsset          = [AVURLAsset URLAssetWithURL:playUrl options:nil];
+        [_videoURLAsset.resourceLoader setDelegate:self.resouerLoader queue:dispatch_get_main_queue()];
+        self.currentPlayerItem      = [AVPlayerItem playerItemWithAsset:_videoURLAsset];
+        
+        _isLocalVideo = NO;
+    } else {
+        self.videoAsset = [AVURLAsset URLAssetWithURL:self.currentURL options:nil];
+        self.currentPlayerItem = [AVPlayerItem playerItemWithAsset:_videoAsset];
+        _isLocalVideo = YES;
+    }
+
+    [self showToolView];
+    [self.player replaceCurrentItemWithPlayerItem:self.currentPlayerItem];
+    [(AVPlayerLayer *)self.playerView.layer setPlayer:self.player];
+    
+    [self.currentPlayerItem addObserver:self forKeyPath:HCDVideoPlayerItemStatusKeyPath options:NSKeyValueObservingOptionNew context:nil];
+    [self.currentPlayerItem addObserver:self forKeyPath:HCDVideoPlayerItemLoadedTimeRangesKeyPath options:NSKeyValueObservingOptionNew context:nil];
+    [self.currentPlayerItem addObserver:self forKeyPath:HCDVideoPlayerItemPlaybackBufferEmptyKeyPath options:NSKeyValueObservingOptionNew context:nil];
+    [self.currentPlayerItem addObserver:self forKeyPath:HCDVideoPlayerItemPlaybackLikelyToKeepUpKeyPath options:NSKeyValueObservingOptionNew context:nil];
+    [self.currentPlayerItem addObserver:self forKeyPath:HCDVideoPlayerItemPresentationSizeKeyPath options:NSKeyValueObservingOptionNew context:nil];
+    
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appDidEnterBackground) name:UIApplicationWillResignActiveNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appDidEnterPlayGround) name:UIApplicationDidBecomeActiveNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(playerItemDidPlayToEnd:) name:AVPlayerItemDidPlayToEndTimeNotification object:self.currentPlayerItem];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(playerItemPlaybackStalled:) name:AVPlayerItemPlaybackStalledNotification object:self.currentPlayerItem];
+}
+
+
+
 - (void)fullScreen {
     //如果全屏下
-    if (_isFullScreen) {
-        [self toOrientation:UIInterfaceOrientationPortrait];
+    if (self.isFullScreen) {
+        [self toOrientation:_currentOrientation];
     }else{
-        [self toOrientation:UIInterfaceOrientationLandscapeRight];
+        [self toOrientation:_currentOrientation];
     }
     [self showToolView];
+    
+    self.isFullScreen = !self.isFullScreen;
 }
 
 - (void)halfScreen {
@@ -311,7 +378,7 @@ typedef enum : NSUInteger {
     
 }
 
-- (void)seekToTime:(CGFloat)seconds {
+- (void)seekToTime:(CGFloat)seconds completionHandler:(void (^)(BOOL finished))completionHandler{
     if (self.state == HCDPlayerStateStopped) {
         return;
     }
@@ -329,6 +396,10 @@ typedef enum : NSUInteger {
             self.actIndicator.hidden = NO;
             [self.actIndicator startAnimating];
             //            [[XCHudHelper sharedInstance] showHudOnView:_showView caption:nil image:nil acitivity:YES autoHideTime:0];
+        }
+        
+        if (completionHandler) {
+            completionHandler(finished);
         }
         
     }];
@@ -359,7 +430,7 @@ typedef enum : NSUInteger {
     //如果当前播放次数小于重复播放次数，继续重新播放
     if (self.playCount < self.playRepatCount) {
         self.playCount++;
-        [self seekToTime:0];
+        [self seekToTime:0 completionHandler:nil];
         [self updateCurrentTime:0];
     } else {
         
@@ -391,8 +462,12 @@ typedef enum : NSUInteger {
     if ([HCDVideoPlayerItemStatusKeyPath isEqualToString:keyPath]) {
         if ([playerItem status] == AVPlayerStatusReadyToPlay) {
             
-            _hiddenTimer = [NSTimer scheduledTimerWithTimeInterval:5.0 target:self selector:@selector(toolViewHidden) userInfo:nil repeats:NO];
-            [self monitoringPlayback:playerItem];// 给播放器添加计时器
+            self.isPlayerReady = YES;
+            if(self.isReady) {
+                [_hiddenTimer invalidate];
+                _hiddenTimer = [NSTimer scheduledTimerWithTimeInterval:5.0 target:self selector:@selector(toolViewHidden) userInfo:nil repeats:NO];
+                [self monitoringPlayback:playerItem];// 给播放器添加计时器
+            }
             
         } else if ([playerItem status] == AVPlayerStatusFailed || [playerItem status] == AVPlayerStatusUnknown) {
             [self stop];
@@ -428,33 +503,45 @@ typedef enum : NSUInteger {
 
 - (void)monitoringPlayback:(AVPlayerItem *)playerItem
 {
-    
-    self.duration = playerItem.duration.value / playerItem.duration.timescale; //视频总时间
     [self.player play];
-    [self updateTotolTime:self.duration];
-    [self setPlaySliderValue:self.duration];
     
-    __weak __typeof(self)weakSelf = self;
-    self.playbackTimeObserver = [self.player addPeriodicTimeObserverForInterval:CMTimeMake(1, 1) queue:NULL usingBlock:^(CMTime time) {
+    if (!self.playbackTimeObserver) {
+        self.duration = playerItem.duration.value / playerItem.duration.timescale; //视频总时间
+        [self updateTotolTime:self.duration];
+        [self setPlaySliderValue:self.duration];
         
-        __strong __typeof(weakSelf)strongSelf = weakSelf;
-        CGFloat current = playerItem.currentTime.value / playerItem.currentTime.timescale;
-        [strongSelf updateCurrentTime:current];
-        [strongSelf updateVideoSlider:current];
-        if (strongSelf.isPauseByUser == NO) {
-            strongSelf.state = HCDPlayerStatePlaying;
-        }
-        
-        // 不相等的时候才更新，并发通知，否则seek时会继续跳动
-        if (strongSelf.current != current) {
-            strongSelf.current = current;
-            if (strongSelf.current > strongSelf.duration) {
-                strongSelf.duration = strongSelf.current;
+        __weak __typeof(self)weakSelf = self;
+        self.playbackTimeObserver = [self.player addPeriodicTimeObserverForInterval:CMTimeMake(1, 1) queue:NULL usingBlock:^(CMTime time) {
+            
+            //NSLog(@"%lld", time.value);
+            __strong __typeof(weakSelf)strongSelf = weakSelf;
+            
+            if (strongSelf.isSliderChanging) {
+                return;
             }
-            [[NSNotificationCenter defaultCenter] postNotificationName:kHCDPlayerProgressChangedNotification object:nil];
-        }
-        
-    }];
+
+            
+            CGFloat current = playerItem.currentTime.value / playerItem.currentTime.timescale;
+            [strongSelf updateCurrentTime:current];
+            [strongSelf updateVideoSlider:current];
+            if (strongSelf.isPauseByUser == NO) {
+                strongSelf.state = HCDPlayerStatePlaying;
+            }
+            
+            // 不相等的时候才更新，并发通知，否则seek时会继续跳动
+            if (strongSelf.current != current) {
+
+                strongSelf.current = current;
+                if (strongSelf.current > strongSelf.duration) {
+                        strongSelf.duration = strongSelf.current;
+
+                    [[NSNotificationCenter defaultCenter] postNotificationName:kHCDPlayerProgressChangedNotification object:nil];
+                }
+            }
+            
+        }];
+
+    }
     
 }
 
@@ -610,10 +697,17 @@ typedef enum : NSUInteger {
         [_playSlider setThumbImage:[UIImage imageNamed:HcdImageSrcName(@"icon_progress")] forState:UIControlStateNormal];
         _playSlider.minimumTrackTintColor = [UIColor whiteColor];
         _playSlider.maximumTrackTintColor = [UIColor colorWithRed:0.5 green:0.5 blue:0.5 alpha:0.5];
-        [_playSlider addTarget:self action:@selector(playSliderChange:) forControlEvents:UIControlEventValueChanged]; //拖动滑竿更新时间
-        [_playSlider addTarget:self action:@selector(playSliderChangeEnd:) forControlEvents:UIControlEventTouchUpInside];  //松手,滑块拖动停止
-        [_playSlider addTarget:self action:@selector(playSliderChangeEnd:) forControlEvents:UIControlEventTouchUpOutside];
-        [_playSlider addTarget:self action:@selector(playSliderChangeEnd:) forControlEvents:UIControlEventTouchCancel];
+        
+        UITapGestureRecognizer *sliderTap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(sliderTapAction:)];
+        sliderTap.numberOfTapsRequired = 1;
+        sliderTap.numberOfTouchesRequired = 1;
+        sliderTap.delegate = self;
+        [_playSlider addGestureRecognizer:sliderTap];
+        
+        //自己写Pan，为了嵌入UIPageViewController的时候，slider的pan选择不会等0.6s才会生效
+        UIPanGestureRecognizer * sliderPanGesture = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(sliderPanAction:)];
+        sliderPanGesture.delegate = self;
+        [_playSlider addGestureRecognizer:sliderPanGesture];
     }
     
     return _playSlider;
@@ -821,28 +915,41 @@ typedef enum : NSUInteger {
     tap.numberOfTouchesRequired = 1;
     tap.delegate = self;
     [self.touchView addGestureRecognizer:tap];
+
     
+
     UIPanGestureRecognizer *panRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePan:)];
     [panRecognizer setMinimumNumberOfTouches:1];
     [panRecognizer setMaximumNumberOfTouches:1];
     [panRecognizer setDelegate:self];
     [self.touchView addGestureRecognizer:panRecognizer];
-    
-    UITapGestureRecognizer *sliderTap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(sliderTapAction:)];
-    sliderTap.numberOfTapsRequired = 1;
-    sliderTap.numberOfTouchesRequired = 1;
-    sliderTap.delegate = self;
-    [self.playSlider addGestureRecognizer:sliderTap];
 }
 
 #pragma mark - UIGestureRecognizerDelegate
 
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch{
-    if (_controlJudge) {
-        return NO;
-    }else{
-        return YES;
+
+    
+    if ([gestureRecognizer isKindOfClass:[UIPanGestureRecognizer class]]) {
+        
+        if (![self isEnablePanGesture]) {
+            return NO;
+        }
+        
+        if (_controlJudge) {
+            return NO;
+        }else{
+            return YES;
+        }
     }
+    
+   return YES;
+}
+
+- (BOOL)isEnablePanGesture
+{
+    //isFullScreen 开启, toolView 才会有手势
+    return self.isUsePanGesture || self.isFullScreen || !self.toolView.hidden;
 }
 
 - (void)tapAction:(UITapGestureRecognizer *)tap{
@@ -859,6 +966,7 @@ typedef enum : NSUInteger {
 }
 
 - (void)sliderTapAction:(UITapGestureRecognizer *)tap {
+    
     if (tap.numberOfTapsRequired == 1) {
         NSLog(@"点击了playSlider");
         CGPoint touchPoint = [tap locationInView:self.playSlider];
@@ -867,12 +975,50 @@ typedef enum : NSUInteger {
         
         float value = (touchPoint.x / self.playSlider.frame.size.width) * self.playSlider.maximumValue;
         
-        [self seekToTime:value];
+        [self seekToTime:value completionHandler:nil];
         [self updateCurrentTime:value];
     }
 }
 
+- (void)sliderPanAction:(UIPanGestureRecognizer *)pan {
+    
+    NSLog(@"点击了sliderPanAction");
+    CGPoint touchPoint = [pan locationInView:self.playSlider];
+    NSLog(@"(%f,%f)", touchPoint.x, touchPoint.y);
+    NSLog(@"%f duration:%f", self.playSlider.frame.size.width, self.duration);
+    
+    float value = (touchPoint.x / self.playSlider.frame.size.width) * self.playSlider.maximumValue;
+
+    
+    if ([pan state] == UIGestureRecognizerStateEnded) {
+
+        [self seekToTime:value completionHandler:^(BOOL finished) {
+            self.isSliderChanging = NO;
+        }];
+        [self updateCurrentTime:value];
+        [self.playSlider setValue:value];
+        
+        [self.stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_pause")] forState:UIControlStateNormal];
+        [self.stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_pause_hl")] forState:UIControlStateHighlighted];
+        
+    }
+    else
+    {
+        
+        self.isSliderChanging = YES;
+        [self updateCurrentTime:value];
+        [self.playSlider setValue:value];
+    }
+}
+
 - (void)handlePan:(UIPanGestureRecognizer *)recognizer {
+    
+    //isFullScreen 开启, toolView 才会有手势
+    if (![self isEnablePanGesture]) {
+
+        return;
+    }
+    
     
     CGPoint touchPoint = [recognizer locationInView:self.touchView];
     NSLog(@"(%f,%f)", touchPoint.x, touchPoint.y);
@@ -958,7 +1104,7 @@ typedef enum : NSUInteger {
         if (_hasMoved) {
             if (HCDPlayerControlTypeProgress == _controlType) {
                 float value = [self moveProgressControllWithTempPoint:touchPoint];
-                [self seekToTime:value];
+                [self seekToTime:value completionHandler:nil];
                 self.timeSheetView.hidden = YES;
             }
         }
@@ -995,6 +1141,20 @@ typedef enum : NSUInteger {
 #pragma mark - 控制条隐藏
 
 - (void)toolViewHidden {
+    if (self.isSliderChanging) {
+
+        [_hiddenTimer invalidate];
+        
+        if (!_hiddenTimer.valid) {
+            _hiddenTimer = [NSTimer scheduledTimerWithTimeInterval:5.0 target:self selector:@selector(toolViewHidden) userInfo:nil repeats:NO];
+        }else{
+            [_hiddenTimer invalidate];
+            _hiddenTimer = [NSTimer scheduledTimerWithTimeInterval:5.0 target:self selector:@selector(toolViewHidden) userInfo:nil repeats:NO];
+        }
+        
+        return;
+    }
+    
     self.toolView.hidden = YES;
     self.statusBarBgView.hidden = YES;
     
@@ -1035,15 +1195,13 @@ typedef enum : NSUInteger {
 //手指结束拖动，播放器从当前点开始播放，开启滑竿的时间走动
 - (void)playSliderChangeEnd:(UISlider *)slider
 {
-    [self seekToTime:slider.value];
-    [self updateCurrentTime:slider.value];
-    [self.stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_pause")] forState:UIControlStateNormal];
-    [self.stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_pause_hl")] forState:UIControlStateHighlighted];
+
 }
 
 //手指正在拖动，播放器继续播放，但是停止滑竿的时间走动
 - (void)playSliderChange:(UISlider *)slider
 {
+    self.isSliderChanging = YES;
     [self updateCurrentTime:slider.value];
 }
 
@@ -1123,7 +1281,7 @@ typedef enum : NSUInteger {
         self.repeatBtn.hidden = YES;
         [self.stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_pause")] forState:UIControlStateNormal];
         [self.stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_pause_hl")] forState:UIControlStateHighlighted];
-        [self seekToTime:0.0];
+        [self seekToTime:0.0 completionHandler:nil];
         self.state = HCDPlayerStatePlaying;
     }
     self.isPauseByUser = YES;
@@ -1146,6 +1304,8 @@ typedef enum : NSUInteger {
         return;
     }
     
+    self.isReady = YES;
+    
     [self.stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_pause")] forState:UIControlStateNormal];
     [self.stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_pause_hl")] forState:UIControlStateHighlighted];
     self.isPauseByUser = NO;
@@ -1165,6 +1325,16 @@ typedef enum : NSUInteger {
     self.isPauseByUser = YES;
     self.state = HCDPlayerStatePause;
     [self.player pause];
+    
+    self.isReady = NO;
+    //AVPlayer 有Observer, 不能自己析构，因此在这里 等待若干秒干掉它
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(self.stopAfterPauseSec * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        @synchronized(self) {
+            if (self && !self.isReady) {
+                [self stop];
+            }
+        }
+    });
 }
 
 /**
@@ -1172,16 +1342,21 @@ typedef enum : NSUInteger {
  */
 - (void)stop
 {
+    self.isPlayerReady = NO;
+    
     self.isPauseByUser = YES;
     self.loadedProgress = 0;
     self.duration = 0;
     self.current  = 0;
+ 
     self.state = HCDPlayerStateStopped;
     [self.player pause];
     [self releasePlayer];
     self.repeatBtn.hidden = YES;
     [self toolViewHidden];
     [[NSNotificationCenter defaultCenter] postNotificationName:kHCDPlayerProgressChangedNotification object:nil];
+    
+    [(AVPlayerLayer *)self.playerView.layer setPlayer:nil];
 }
 
 /**
@@ -1214,6 +1389,7 @@ typedef enum : NSUInteger {
     [self.player removeTimeObserver:self.playbackTimeObserver];
     self.playbackTimeObserver = nil;
     self.currentPlayerItem = nil;
+    
     
     if (self.resouerLoader.task) {
         [self.resouerLoader.task cancel];
@@ -1273,16 +1449,16 @@ typedef enum : NSUInteger {
     UIDeviceOrientation orientation = [[UIDevice currentDevice] orientation];
     switch (orientation) {
         case UIDeviceOrientationPortrait:
-            [self toOrientation:UIInterfaceOrientationPortrait];
+            //[self toOrientation:UIInterfaceOrientationPortrait];
             break;
         case UIDeviceOrientationLandscapeLeft:
-            [self toOrientation:UIInterfaceOrientationLandscapeRight];
+            //[self toOrientation:UIInterfaceOrientationLandscapeRight];
             break;
         case UIDeviceOrientationLandscapeRight:
-            [self toOrientation:UIInterfaceOrientationLandscapeLeft];
+            //[self toOrientation:UIInterfaceOrientationLandscapeLeft];
             break;
         case UIDeviceOrientationPortraitUpsideDown:
-            [self toOrientation:UIInterfaceOrientationPortraitUpsideDown];
+            //[self toOrientation:UIInterfaceOrientationPortraitUpsideDown];
             break;
         default:
             break;
@@ -1297,68 +1473,89 @@ typedef enum : NSUInteger {
         return;
     }
     
-    //    UIInterfaceOrientation currentOrientation = [UIApplication sharedApplication].statusBarOrientation;
+    //to do UIInterfaceOrientationPortrait not finish
+//    if (orientation == UIInterfaceOrientationPortrait || orientation == UIInterfaceOrientationPortraitUpsideDown) {
+//        //to do
+//        
+//    } else if (orientation == UIInterfaceOrientationLandscapeLeft || orientation == UIInterfaceOrientationLandscapeRight) {
+    if(YES) {
+        if (self.isFullScreen) {
+            [self.showView removeFromSuperview];
+            [self.originalSuperView addSubview:self.showView];
+  
+            HcdLightView *lightView = [HcdLightView sharedInstance];
+            [[UIApplication sharedApplication].keyWindow bringSubviewToFront:lightView];
+            __weak HcdCacheVideoPlayer * weakSelf = self;
+            [self.showView mas_remakeConstraints:^(MASConstraintMaker *make) {
+                make.edges.equalTo(weakSelf.originalSuperView);
+            }];
+            
+            [lightView mas_remakeConstraints:^(MASConstraintMaker *make) {
+                make.centerX.equalTo([UIApplication sharedApplication].keyWindow);
+                make.centerY.equalTo([UIApplication sharedApplication].keyWindow).offset(-5);
+                make.width.mas_equalTo(155);
+                make.height.mas_equalTo(155);
+            }];
+
+        }
+        else {
+            [self.showView removeFromSuperview];
+            [[UIApplication sharedApplication].keyWindow addSubview:self.showView];
+            
+            // 亮度view加到window最上层
+            HcdLightView *lightView = [HcdLightView sharedInstance];
+            [[UIApplication sharedApplication].keyWindow insertSubview:self.showView belowSubview:lightView];
+            
+            [self.showView mas_remakeConstraints:^(MASConstraintMaker *make) {
+                if (_currentOrientation == orientation) {
+                    make.width.equalTo(@(kScreenWidth));
+                    make.height.equalTo(@(kScreenHeight));
+                }
+                else {
+                    make.width.equalTo(@(kScreenHeight));
+                    make.height.equalTo(@(kScreenWidth));
+                }
+                
+                make.center.equalTo([[UIApplication sharedApplication].delegate window]);
+            }];
+            
+            [lightView mas_remakeConstraints:^(MASConstraintMaker *make) {
+                make.centerX.equalTo([UIApplication sharedApplication].keyWindow);
+                make.centerY.equalTo([UIApplication sharedApplication].keyWindow);
+                make.width.mas_equalTo(155);
+                make.height.mas_equalTo(155);
+            }];
+
+        }
+
+    }
+    
+    // 告诉self.view约束需要更新
+    [self.showView setNeedsUpdateConstraints];
+    // 调用此方法告诉self.view检测是否需要更新约束，若需要则更新，下面添加动画效果才起作用
+    [self.showView updateConstraintsIfNeeded];
+    [UIView animateWithDuration:0.3 animations:^{
+        [self.showView layoutIfNeeded];
+    }];
+    
+    
+    
     if (_currentOrientation == orientation) {
         return;
     }
-    
-    if (orientation == UIInterfaceOrientationPortrait || orientation == UIInterfaceOrientationPortraitUpsideDown) {
-        [self.showView removeFromSuperview];
-        [self.playerSuperView addSubview:self.showView];
-        
-        HcdLightView *lightView = [HcdLightView sharedInstance];
-        [[UIApplication sharedApplication].keyWindow bringSubviewToFront:lightView];
-        __weak HcdCacheVideoPlayer * weakSelf = self;
-        [self.showView mas_remakeConstraints:^(MASConstraintMaker *make) {
-            make.top.mas_equalTo(CGRectGetMinY(weakSelf.showViewRect));
-            make.left.mas_equalTo(CGRectGetMinX(weakSelf.showViewRect));
-            make.width.mas_equalTo(CGRectGetWidth(weakSelf.showViewRect));
-            make.height.mas_equalTo(CGRectGetHeight(weakSelf.showViewRect));
+    else {
+        [UIView animateWithDuration:0.5 animations:^{
+            [[UIApplication sharedApplication] setStatusBarOrientation:_currentOrientation animated:YES];
+            //旋转视频播放的view和显示亮度的view
+            self.showView.transform = [self getOrientation:orientation];
+            [HcdLightView sharedInstance].transform = [self getOrientation:orientation];
+        } completion:^(BOOL finished) {
+            
         }];
         
-        [lightView mas_remakeConstraints:^(MASConstraintMaker *make) {
-            make.centerX.equalTo([UIApplication sharedApplication].keyWindow);
-            make.centerY.equalTo([UIApplication sharedApplication].keyWindow).offset(-5);
-            make.width.mas_equalTo(155);
-            make.height.mas_equalTo(155);
-        }];
-    } else if (orientation == UIInterfaceOrientationLandscapeLeft || orientation == UIInterfaceOrientationLandscapeRight) {
-        [self.showView removeFromSuperview];
-        [[UIApplication sharedApplication].keyWindow addSubview:self.showView];
-        
-        // 亮度view加到window最上层
-        HcdLightView *lightView = [HcdLightView sharedInstance];
-        [[UIApplication sharedApplication].keyWindow insertSubview:self.showView belowSubview:lightView];
-        
-        [self.showView mas_remakeConstraints:^(MASConstraintMaker *make) {
-            make.width.equalTo(@(kScreenHeight));
-            make.height.equalTo(@(kScreenWidth));
-            make.center.equalTo([[UIApplication sharedApplication].delegate window]);
-        }];
-        
-        [lightView mas_remakeConstraints:^(MASConstraintMaker *make) {
-            make.centerX.equalTo([UIApplication sharedApplication].keyWindow);
-            make.centerY.equalTo([UIApplication sharedApplication].keyWindow);
-            make.width.mas_equalTo(155);
-            make.height.mas_equalTo(155);
-        }];
+        _currentOrientation = orientation;
     }
-    
-    _currentOrientation = orientation;
-    
-    //
-    //    [UIView beginAnimations:nil context:nil];
-    //
-    //    [UIView setAnimationDuration:0.5];
-    //    [UIView commitAnimations];
-    [UIView animateWithDuration:0.5 animations:^{
-        [[UIApplication sharedApplication] setStatusBarOrientation:_currentOrientation animated:YES];
-        //旋转视频播放的view和显示亮度的view
-        self.showView.transform = [self getOrientation:orientation];
-        [HcdLightView sharedInstance].transform = [self getOrientation:orientation];
-    } completion:^(BOOL finished) {
-        
-    }];
+
 }
 
 //根据状态条旋转的方向来旋转 avplayerView
