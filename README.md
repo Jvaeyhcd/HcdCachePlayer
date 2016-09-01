@@ -1,9 +1,10 @@
 HcdCachePlayer
-1.支持多视频同时播放，不在共用单例
-2.支持手动开始播放
-3.支持不全屏模式和toolBar没有出现的时候取消手势
-4.修复在UIPageViewcontroller的时候，拖动进度条，会触发UIPageViewcontroller手势的BUG
-5.横屏全屏模式
+
+* 1.支持多视频同时播放，不在共用单例
+* 2.支持手动开始播放
+* 3.支持不全屏模式和toolBar没有出现的时候取消手势
+* 4.修复在UIPageViewcontroller的时候，拖动进度条，会触发UIPageViewcontroller手势的BUG
+* 5.支持横屏全屏模式
 
 
 
