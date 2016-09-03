@@ -81,7 +81,7 @@ typedef enum : NSUInteger {
 @property (nonatomic, assign) BOOL           isSliderChanging;        //精度条调节
 
 @property (nonatomic, weak  ) NSURL          *currentURL;             //播放地址
-@property (nonatomic, weak  ) UIImage        *coverImage;             //停止播放或未启动播放时候的封面图片
+@property (nonatomic, strong) UIImageView    *coverImageView;             //停止播放或未启动播放时候的封面图片
 @property (nonatomic, weak  ) UIView         *originalSuperView;      //原始的父View
 @property (nonatomic, weak  ) UIView         *showView;
 @property (nonatomic, strong) HcdPlayerView  *playerView;
@@ -119,7 +119,7 @@ typedef enum : NSUInteger {
         _loadedProgress = 0;
         _duration = 0;
         _current  = 0;
-        _state = HCDPlayerStateStopped;
+        _state = HCDPlayerStateNotSetup;
         _stopInBackground = YES;
         _isUsePanGesture = YES;
         _isFullScreen = NO;
@@ -130,6 +130,7 @@ typedef enum : NSUInteger {
         _isPlayerReady = NO;
         _isSliderChanging = NO;
         _stopAfterPauseSec = kDefaultStopAfterPauseSec;
+        _coverImageView = [[UIImageView alloc] init];
         
         UIDeviceOrientation orientation = [[UIDevice currentDevice] orientation];
         switch (orientation) {
@@ -154,18 +155,31 @@ typedef enum : NSUInteger {
 }
 
 
-- (void)setupWithVideoUrl:(NSURL *)url showView:(UIView *)showView coverImage:(UIImage *)coverImage
+- (void)beforeSetupSetCoverImageURL:(NSString *)coverImageURL
+                           showView:(UIView *)showView
 {
+    [self.coverImageView sd_setImageWithURL:[NSURL URLWithString:coverImageURL]];
+    self.showView = showView;
+    [self.showView addSubview:self.coverImageView];
+    [self.coverImageView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.edges.equalTo(self.showView);
+    }];
+}
+
+- (void)setupWithVideoUrl:(NSURL *)url
+{
+    if (!self.showView) {
+        NSAssert(@"must run beforeSetupSetCoverImage:WithShowView");
+    }
+    
+    [self.coverImageView removeFromSuperview];
+    
     self.isPauseByUser = NO;
     self.loadedProgress = 0;
     self.duration = 0;
     self.current  = 0;
-    self.coverImage = coverImage;
     self.currentURL = url;
-    self.originalSuperView = showView.superview;
-    
-    _showView = showView;
-
+    self.originalSuperView = self.showView.superview;
     _showView.backgroundColor = [UIColor blackColor];
 
     NSString *str = [url absoluteString];
@@ -219,10 +233,9 @@ typedef enum : NSUInteger {
     //    [self updateOrientation];
 }
 
+
 - (void)setupWithUrl:(NSURL *)url
-           showView:(UIView *)showView
           withCache:(BOOL)withCache
-         coverImage:(UIImage *)coverImage
 {
     
     
@@ -237,9 +250,9 @@ typedef enum : NSUInteger {
     
     if ([[NSFileManager defaultManager] fileExistsAtPath:cachePath] && withCache) {
         NSURL *localURL = [NSURL fileURLWithPath:cachePath];
-        [self setupWithVideoUrl:localURL showView:showView coverImage:coverImage];
+        [self setupWithVideoUrl:localURL];
     } else {
-        [self setupWithVideoUrl:url showView:showView coverImage:coverImage];
+        [self setupWithVideoUrl:url];
     }
     
 }
@@ -379,7 +392,7 @@ typedef enum : NSUInteger {
 }
 
 - (void)seekToTime:(CGFloat)seconds completionHandler:(void (^)(BOOL finished))completionHandler{
-    if (self.state == HCDPlayerStateStopped) {
+    if (self.state == HCDPlayerStateStopped || self.state == HCDPlayerStateNotSetup) {
         return;
     }
     

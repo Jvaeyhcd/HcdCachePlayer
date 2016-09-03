@@ -27,7 +27,8 @@ FOUNDATION_EXPORT NSString *const kHCDPlayerProgressChangedNotification;
 FOUNDATION_EXPORT NSString *const kHCDPlayerLoadProgressChangedNotification;
 
 typedef NS_ENUM(NSInteger, HCDPlayerState) {
-    HCDPlayerStateBuffering = 1,    //正在缓存
+    HCDPlayerStateNotSetup = 1,    //player 还未有setup
+    HCDPlayerStateBuffering,        //正在缓存
     HCDPlayerStatePlaying,          //正在播放
     HCDPlayerStateStopped,          //播放结束
     HCDPlayerStatePause,            //暂停播放
@@ -37,6 +38,7 @@ typedef NS_ENUM(NSInteger, HCDPlayerState) {
 @interface HcdCacheVideoPlayer : NSObject
 
 @property (nonatomic, readonly) HCDPlayerState state;                   //视频Player状态
+
 @property (nonatomic, readonly) CGFloat        loadedProgress;          //缓冲的进度
 @property (nonatomic, readonly) CGFloat        duration;                //视频总时间
 @property (nonatomic, readonly) CGFloat        current;                 //当前播放时间
@@ -50,18 +52,19 @@ typedef NS_ENUM(NSInteger, HCDPlayerState) {
 
 @property (nonatomic, copy    ) void(^playNextBlock)();                 //播放下一个block
 
+
+- (void)beforeSetupSetCoverImageURL:(NSString *)coverImageURL
+                           showView:(UIView *)showView;
+
 /**
  *  播放服务器的视频，先判断本地是否有缓存文件，缓存文件名为连接的url经过md5加密后生成的字符串
  *
  *  @param url       视频地址
  *  @param showView  显示的View
  *  @param withCache 是否播放缓存的文件
-  * @param coverImage 未播放时显示的封面图片
  */
 - (void)setupWithUrl:(NSURL *)url
-            showView:(UIView *)showView
-           withCache:(BOOL)withCache
-          coverImage:(UIImage *)coverImage;
+           withCache:(BOOL)withCache;
 
 /**
  *  play whenever pause or stop
