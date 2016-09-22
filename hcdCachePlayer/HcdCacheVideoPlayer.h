@@ -39,6 +39,7 @@ typedef NS_ENUM(NSInteger, HCDPlayerState) {
 
 @property (nonatomic, readonly) HCDPlayerState state;                   //视频Player状态
 
+@property (nonatomic, strong)   UIImageView    *coverImageView;          //停止播放或未启动播放时候的封面图片
 @property (nonatomic, readonly) CGFloat        loadedProgress;          //缓冲的进度
 @property (nonatomic, readonly) CGFloat        duration;                //视频总时间
 @property (nonatomic, readonly) CGFloat        current;                 //当前播放时间
@@ -55,6 +56,7 @@ typedef NS_ENUM(NSInteger, HCDPlayerState) {
 
 - (void)beforeSetupSetCoverImageURL:(NSString *)coverImageURL
                            showView:(UIView *)showView;
+
 
 /**
  *  播放服务器的视频，先判断本地是否有缓存文件，缓存文件名为连接的url经过md5加密后生成的字符串

@@ -81,7 +81,7 @@ typedef enum : NSUInteger {
 @property (nonatomic, assign) BOOL           isSliderChanging;        //精度条调节
 
 @property (nonatomic, weak  ) NSURL          *currentURL;             //播放地址
-@property (nonatomic, strong) UIImageView    *coverImageView;             //停止播放或未启动播放时候的封面图片
+
 @property (nonatomic, weak  ) UIView         *originalSuperView;      //原始的父View
 @property (nonatomic, weak  ) UIView         *showView;
 @property (nonatomic, strong) HcdPlayerView  *playerView;
@@ -164,16 +164,16 @@ typedef enum : NSUInteger {
     [self.coverImageView mas_makeConstraints:^(MASConstraintMaker *make) {
         make.edges.equalTo(self.showView);
     }];
+
 }
+
 
 - (void)setupWithVideoUrl:(NSURL *)url
 {
     if (!self.showView) {
         NSAssert(@"must run beforeSetupSetCoverImage:WithShowView");
     }
-    
-    [self.coverImageView removeFromSuperview];
-    
+
     self.isPauseByUser = NO;
     self.loadedProgress = 0;
     self.duration = 0;
@@ -395,6 +395,14 @@ typedef enum : NSUInteger {
     if (self.state == HCDPlayerStateStopped || self.state == HCDPlayerStateNotSetup) {
         return;
     }
+    else if (self.state == HCDPlayerStateFinish) {
+        self.repeatBtn.hidden = YES;
+        [self.stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_pause")] forState:UIControlStateNormal];
+        [self.stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_pause_hl")] forState:UIControlStateHighlighted];
+        self.state = HCDPlayerStatePlaying;
+        
+        [self showToolView];
+    }
     
     seconds = MAX(0, seconds);
     seconds = MIN(seconds, self.duration);
@@ -453,7 +461,8 @@ typedef enum : NSUInteger {
         } else {
             //重新播放
             self.repeatBtn.hidden = NO;
-            [self toolViewHidden];
+            //[self toolViewHidden];
+            self.toolView.hidden = NO;
             self.state = HCDPlayerStateFinish;
             [self.stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_play")] forState:UIControlStateNormal];
             [self.stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_play_hl")] forState:UIControlStateHighlighted];
@@ -1108,8 +1117,8 @@ typedef enum : NSUInteger {
     }
     
     if (([(UIPanGestureRecognizer *)recognizer state] == UIGestureRecognizerStateEnded) || ([(UIPanGestureRecognizer *)recognizer state] == UIGestureRecognizerStateCancelled)) {
-        CGFloat x = recognizer.view.center.x;
-        CGFloat y = recognizer.view.center.y;
+        //CGFloat x = recognizer.view.center.x;
+        //CGFloat y = recognizer.view.center.y;
         
         NSLog(@"%lf,%lf", x, y);
         _controlJudge = NO;
@@ -1154,7 +1163,8 @@ typedef enum : NSUInteger {
 #pragma mark - 控制条隐藏
 
 - (void)toolViewHidden {
-    if (self.isSliderChanging) {
+    //if HCDPlayerStateFinish should show the toolview, if not, can not click fullscreen
+    if (self.state == HCDPlayerStateFinish || self.isSliderChanging) {
 
         [_hiddenTimer invalidate];
         
@@ -1296,6 +1306,8 @@ typedef enum : NSUInteger {
         [self.stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_pause_hl")] forState:UIControlStateHighlighted];
         [self seekToTime:0.0 completionHandler:nil];
         self.state = HCDPlayerStatePlaying;
+        
+        [self showToolView];
     }
     self.isPauseByUser = YES;
 }
