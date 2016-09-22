@@ -1,3 +1,6 @@
+效果参考上架的app：http://itunes.apple.com/cn/app/id1153411266
+
+
 HcdCachePlayer
 
 * 1.支持多视频同时播放，不在共用单例
