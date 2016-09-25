@@ -171,7 +171,7 @@ typedef enum : NSUInteger {
 - (void)setupWithVideoUrl:(NSURL *)url
 {
     if (!self.showView) {
-        NSAssert(@"must run beforeSetupSetCoverImage:WithShowView");
+        NSAssert(NO, @"must run beforeSetupSetCoverImage:WithShowView");
     }
 
     self.isPauseByUser = NO;
@@ -392,9 +392,10 @@ typedef enum : NSUInteger {
 }
 
 - (void)seekToTime:(CGFloat)seconds completionHandler:(void (^)(BOOL finished))completionHandler{
-    if (self.state == HCDPlayerStateStopped || self.state == HCDPlayerStateNotSetup) {
+    if (!self.isPlayerReady || self.state == HCDPlayerStateStopped || self.state == HCDPlayerStateNotSetup) {
         return;
     }
+    
     else if (self.state == HCDPlayerStateFinish) {
         self.repeatBtn.hidden = YES;
         [self.stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_pause")] forState:UIControlStateNormal];
@@ -1018,7 +1019,7 @@ typedef enum : NSUInteger {
             self.isSliderChanging = NO;
         }];
         [self updateCurrentTime:value];
-        [self.playSlider setValue:value];
+        //[self.playSlider setValue:value];
         
         [self.stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_pause")] forState:UIControlStateNormal];
         [self.stopButton setImage:[UIImage imageNamed:HcdImageSrcName(@"icon_pause_hl")] forState:UIControlStateHighlighted];
@@ -1117,8 +1118,8 @@ typedef enum : NSUInteger {
     }
     
     if (([(UIPanGestureRecognizer *)recognizer state] == UIGestureRecognizerStateEnded) || ([(UIPanGestureRecognizer *)recognizer state] == UIGestureRecognizerStateCancelled)) {
-        //CGFloat x = recognizer.view.center.x;
-        //CGFloat y = recognizer.view.center.y;
+        CGFloat x = recognizer.view.center.x;
+        CGFloat y = recognizer.view.center.y;
         
         NSLog(@"%lf,%lf", x, y);
         _controlJudge = NO;
