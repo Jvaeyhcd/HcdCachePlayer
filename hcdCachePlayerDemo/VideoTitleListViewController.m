@@ -29,7 +29,7 @@
     [self.videoList addObject:@"http://mpv.videocc.net/4559da324b/0/4559da324b6c813324a2289f59baaa40_1.mp4"];
     [self.videoList addObject:@"http://oaundxu29.bkt.clouddn.com/Ferr2DTerrainunity3d.mp4"];
     [self.videoList addObject:@"http://oje4im6c1.bkt.clouddn.com/14564977406581.mp4"];
-    
+
     [self.view addSubview:self.tableView];
 }
 
